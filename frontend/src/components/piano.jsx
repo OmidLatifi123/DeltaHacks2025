@@ -53,19 +53,30 @@ const Piano = () => {
         </div>
       </div>
 
-      <iframe
-        src="http://127.0.0.1:5000/webcam"
+      {/* Webcam Feed */}
+      <div
         style={{
-          width: "320px",
-          height: "240px",
           position: "absolute",
           bottom: "10px",
           left: "50%",
           transform: "translateX(-50%)",
+          width: "320px",
+          height: "240px",
           border: "1px solid black",
+          borderRadius: "8px", // Rounded corners
+          overflow: "hidden", // Ensure no scrollbars appear
         }}
-        title="Webcam Feed"
-      ></iframe>
+      >
+        <iframe
+          src="http://127.0.0.1:5000/webcam"
+          style={{
+            width: "320px", // Match the width of the parent container
+            height: "240px", // Match the height of the parent container
+            border: "none",
+          }}
+          title="Webcam Feed"
+        ></iframe>
+      </div>
 
       <div>
         <h3>Hand Data</h3>

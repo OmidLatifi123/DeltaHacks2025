@@ -18,7 +18,7 @@ hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5
 pygame.midi.init()
 midi_out = pygame.midi.Output(pygame.midi.get_default_output_id())
 
-# MIDI notes
+# MIDI note numbers for a single octave
 midi_note_numbers = {
     "C": 60, "D": 62, "E": 64, "F": 65, "G": 67, "A": 69, "B": 71, "C_high": 72
 }
@@ -35,31 +35,45 @@ keys = [
     {'note': 'C_high', 'x_min': 400, 'x_max': 450, 'y_min': 300, 'y_max': 350},
 ]
 
-# Track active notes
-active_notes = {}
+# Track active notes and hand data
+active_notes = set()
+hand_landmarks_data = []  # To store hand landmarks for the /hand-data endpoint
 is_running = False
 
 
 def draw_keys(frame):
-    """Draw the piano keys on the video frame."""
+    """Draw virtual piano keys on the video frame."""
     for key in keys:
-        cv2.rectangle(frame, (key['x_min'], key['y_min']), (key['x_max'], key['y_max']), (255, 255, 255), 2)
-        cv2.putText(frame, key['note'], (key['x_min'] + 10, key['y_min'] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        cv2.rectangle(
+            frame,
+            (key['x_min'], key['y_min']),
+            (key['x_max'], key['y_max']),
+            (255, 255, 255),
+            2,
+        )
+        cv2.putText(
+            frame,
+            key['note'],
+            (key['x_min'] + 10, key['y_min'] - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 255, 255),
+            1,
+        )
 
 
 def play_midi(note):
     """Play a MIDI note."""
     if note in midi_note_numbers and note not in active_notes:
         midi_out.note_on(midi_note_numbers[note], velocity=100)
-        active_notes[note] = True
+        active_notes.add(note)
 
 
 def stop_midi(note):
     """Stop a MIDI note."""
     if note in midi_note_numbers and note in active_notes:
         midi_out.note_off(midi_note_numbers[note], velocity=100)
-        del active_notes[note]
+        active_notes.remove(note)
 
 
 @app.route('/webcam')
@@ -69,6 +83,7 @@ def webcam():
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        global hand_landmarks_data
         while True:
             success, frame = cap.read()
             if not success:
@@ -79,10 +94,22 @@ def webcam():
                 frame = cv2.cvtColor(rgb_frame, cv2.COLOR_RGB2BGR)
                 draw_keys(frame)
 
+                hand_landmarks_data = []  # Clear previous frame data
                 if results.multi_hand_landmarks:
                     for hand_landmarks in results.multi_hand_landmarks:
                         mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
+                        # Collect hand landmarks data for /hand-data
+                        single_hand_data = [
+                            {
+                                "x": lm.x,
+                                "y": lm.y,
+                                "z": lm.z
+                            } for lm in hand_landmarks.landmark
+                        ]
+                        hand_landmarks_data.append(single_hand_data)
+
+                        # Detect fingers over keys
                         keys_with_fingers = set()
                         for finger_tip_idx in [
                             mp_hands.HandLandmark.THUMB_TIP,
@@ -94,13 +121,16 @@ def webcam():
                             fingertip_x = int(hand_landmarks.landmark[finger_tip_idx].x * frame.shape[1])
                             fingertip_y = int(hand_landmarks.landmark[finger_tip_idx].y * frame.shape[0])
 
+                            # Check which key the finger is on
                             for key in keys:
                                 if key['x_min'] <= fingertip_x <= key['x_max'] and key['y_min'] <= fingertip_y <= key['y_max']:
                                     keys_with_fingers.add(key['note'])
 
+                        # Play notes for detected keys
                         for note in keys_with_fingers:
                             play_midi(note)
 
+                        # Stop notes for undetected keys
                         for note in list(active_notes):
                             if note not in keys_with_fingers:
                                 stop_midi(note)
@@ -113,75 +143,11 @@ def webcam():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-@app.route('/')
-def home():
-    """Default route."""
-    return jsonify({"message": "Piano Backend is running"})
-
-
-@app.route('/start-piano', methods=['GET'])
-def start_piano():
-    """Start the piano service."""
-    global is_running
-    if not is_running:
-        thread = Thread(target=run_virtual_piano)
-        thread.start()
-        return jsonify({'status': 'success', 'message': 'Virtual piano started'})
-    return jsonify({'status': 'error', 'message': 'Virtual piano is already running'})
-
-
-@app.route('/stop-piano', methods=['GET'])
-def stop_piano():
-    """Stop the piano service."""
-    global is_running
-    is_running = False
-    return jsonify({'status': 'success', 'message': 'Virtual piano stopped'})
-
-
 @app.route('/hand-data', methods=['GET'])
 def get_hand_data():
-    """Endpoint for hand data."""
-    return jsonify({'message': 'Hand data is being processed via webcam.'})
-
-
-def run_virtual_piano():
-    """Main piano logic."""
-    global is_running
-    is_running = True
-    cap = cv2.VideoCapture(0)
-    while is_running and cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = hands.process(rgb_frame)
-        if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
-                keys_with_fingers = set()
-                for finger_tip_idx in [
-                    mp_hands.HandLandmark.THUMB_TIP,
-                    mp_hands.HandLandmark.INDEX_FINGER_TIP,
-                    mp_hands.HandLandmark.MIDDLE_FINGER_TIP,
-                    mp_hands.HandLandmark.RING_FINGER_TIP,
-                    mp_hands.HandLandmark.PINKY_TIP,
-                ]:
-                    fingertip_x = int(hand_landmarks.landmark[finger_tip_idx].x * frame.shape[1])
-                    fingertip_y = int(hand_landmarks.landmark[finger_tip_idx].y * frame.shape[0])
-
-                    for key in keys:
-                        if key['x_min'] <= fingertip_x <= key['x_max'] and key['y_min'] <= fingertip_y <= key['y_max']:
-                            keys_with_fingers.add(key['note'])
-
-                for note in keys_with_fingers:
-                    play_midi(note)
-
-                for note in list(active_notes):
-                    if note not in keys_with_fingers:
-                        stop_midi(note)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            is_running = False
-            break
-    cap.release()
+    """Provide hand data to the frontend."""
+    global hand_landmarks_data
+    return jsonify({'hands': hand_landmarks_data})
 
 
 if __name__ == '__main__':
