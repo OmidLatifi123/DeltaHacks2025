@@ -1,0 +1,142 @@
+/* Main container styles */
+.album-covers-container {
+    padding-top: 5%;
+    font-family: 'Arial', sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header styles */
+.album-covers-title {
+    text-align: center;
+    color: #222;
+    margin-bottom: 2rem;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+}
+
+/* Error message styles */
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 1rem;
+}
+
+/* Grid container styles */
+.albums-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+    align-items: stretch;
+}
+
+/* Album card styles */
+.album-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.album-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Album image styles */
+.album-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 12px 12px 0 0;
+}
+
+/* Album info container styles */
+.album-info {
+    padding: 1.5rem;
+}
+
+/* Album details styles */
+.album-detail {
+    margin: 0.5rem 0;
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.album-detail strong {
+    color: #333;
+    margin-right: 0.5rem;
+    font-weight: 700;
+}
+
+/* Download button styles */
+.download-button {
+    display: inline-block;
+    padding: 0.8rem 1.6rem;
+    margin-top: 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.download-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.download-button:active {
+    transform: translateY(1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .albums-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .album-image {
+        height: 250px;
+    }
+}
+
+@media (max-width: 576px) {
+    .albums-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    .album-image {
+        height: 200px;
+    }
+
+    .album-covers-title {
+        font-size: 2rem;
+    }
+}
+
+/* Loading state styles */
+.loading-spinner {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-size: 1.2rem;
+    font-style: italic;
+}

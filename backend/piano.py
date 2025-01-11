@@ -1,9 +1,13 @@
+from datetime import datetime
 import cv2
 import mediapipe as mp
 import pygame.midi
-from flask import Flask, jsonify, Response
+from flask import Flask, jsonify, Response, request, send_from_directory
 from flask_cors import CORS
-from threading import Thread
+from diffusers import StableDiffusionPipeline
+import torch
+import os
+import random
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -35,10 +39,18 @@ keys = [
     {'note': 'C_high', 'x_min': 400, 'x_max': 450, 'y_min': 300, 'y_max': 350},
 ]
 
-# Track active notes and hand data
+# Track active notes, hand data, and played notes
 active_notes = set()
-hand_landmarks_data = []  # To store hand landmarks for the /hand-data endpoint
-is_running = False
+hand_landmarks_data = []
+recent_notes = []  # Keep track of the most recent notes played (up to 10)
+
+# Ensure the Images folder exists
+images_folder = "Images"
+os.makedirs(images_folder, exist_ok=True)
+
+# Load Stable Diffusion pipeline
+pipeline = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4").to("cuda")
+pipeline.safety_checker = None  # Disable safety checker for abstract album covers
 
 
 def draw_keys(frame):
@@ -63,10 +75,16 @@ def draw_keys(frame):
 
 
 def play_midi(note):
-    """Play a MIDI note."""
+    """Play a MIDI note and record it."""
+    global recent_notes
     if note in midi_note_numbers and note not in active_notes:
         midi_out.note_on(midi_note_numbers[note], velocity=100)
         active_notes.add(note)
+
+        # Record the note
+        recent_notes.append(note)
+        if len(recent_notes) > 10:  # Keep only the last 10 notes
+            recent_notes.pop(0)
 
 
 def stop_midi(note):
@@ -74,6 +92,50 @@ def stop_midi(note):
     if note in midi_note_numbers and note in active_notes:
         midi_out.note_off(midi_note_numbers[note], velocity=100)
         active_notes.remove(note)
+
+
+def generate_abstract_album_cover(notes):
+    """
+    Generate an abstract, detailed album cover based on the most recent notes played.
+    """
+    # Create a prompt based on the notes
+    note_colors = {
+        "C": "red", "D": "green", "E": "blue", "F": "yellow",
+        "G": "purple", "A": "orange", "B": "pink", "C_high": "cyan"
+    }
+    
+    prompt_elements = [f"{note_colors.get(note, 'colorful')} light" for note in notes]
+    prompt = (
+        "A detailed, vibrant abstract album cover featuring swirling, "
+        "dynamic patterns of " + ", ".join(prompt_elements) + ". "
+        "Highly artistic and futuristic design, perfect for a modern album."
+    )
+
+    # Generate the image
+    image = pipeline(prompt, guidance_scale=7.5).images[0]
+
+    # Save the image
+    image_path = os.path.join(images_folder, f"abstract_album_cover_{random.randint(1000, 9999)}.png")
+    image.save(image_path)
+    return image_path
+
+
+@app.route('/generate-image', methods=['POST'])
+def generate_image():
+    """Generate an abstract album cover based on recent notes."""
+    global recent_notes
+    if not recent_notes:
+        return jsonify({"error": "No notes played yet."}), 400
+
+    image_path = generate_abstract_album_cover(recent_notes)
+    recent_notes = []  # Clear recent notes after generating the image
+    return jsonify({"message": "Image generated successfully!", "image_url": f"/Images/{os.path.basename(image_path)}"})
+
+
+@app.route('/Images/<path:filename>')
+def serve_image(filename):
+    """Serve generated images."""
+    return send_from_directory(images_folder, filename)
 
 
 @app.route('/webcam')
@@ -94,22 +156,18 @@ def webcam():
                 frame = cv2.cvtColor(rgb_frame, cv2.COLOR_RGB2BGR)
                 draw_keys(frame)
 
-                hand_landmarks_data = []  # Clear previous frame data
-                keys_with_fingers = set()  # Combine notes detected across all hands
+                hand_landmarks_data = []
+                keys_with_fingers = set()
 
                 if results.multi_hand_landmarks:
                     for hand_landmarks in results.multi_hand_landmarks:
                         mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-                        # Collect hand landmarks data for /hand-data
-                        single_hand_data = [
-                            {
-                                "x": lm.x,
-                                "y": lm.y,
-                                "z": lm.z
-                            } for lm in hand_landmarks.landmark
-                        ]
-                        hand_landmarks_data.append(single_hand_data)
+                        # Extract and store hand landmarks for /hand-data endpoint
+                        hand_landmarks_data.append([
+                            {"x": lm.x, "y": lm.y, "z": lm.z}
+                            for lm in hand_landmarks.landmark
+                        ])
 
                         # Detect fingers over keys
                         for finger_tip_idx in [
@@ -122,16 +180,13 @@ def webcam():
                             fingertip_x = int(hand_landmarks.landmark[finger_tip_idx].x * frame.shape[1])
                             fingertip_y = int(hand_landmarks.landmark[finger_tip_idx].y * frame.shape[0])
 
-                            # Check which key the finger is on
                             for key in keys:
                                 if key['x_min'] <= fingertip_x <= key['x_max'] and key['y_min'] <= fingertip_y <= key['y_max']:
                                     keys_with_fingers.add(key['note'])
 
-                # Play notes for detected keys
                 for note in keys_with_fingers:
                     play_midi(note)
 
-                # Stop notes for undetected keys
                 for note in list(active_notes):
                     if note not in keys_with_fingers:
                         stop_midi(note)
@@ -149,6 +204,20 @@ def get_hand_data():
     """Provide hand data to the frontend."""
     global hand_landmarks_data
     return jsonify({'hands': hand_landmarks_data})
+
+@app.route('/album-covers', methods=['GET'])
+def get_album_covers():
+    """List all album cover images with metadata."""
+    image_files = []
+    for filename in os.listdir(images_folder):
+        if filename.endswith(('.png', '.jpg', '.jpeg')):
+            file_path = os.path.join(images_folder, filename)
+            created_at = os.path.getctime(file_path)
+            image_files.append({
+                "filename": filename,
+                "createdAt": datetime.fromtimestamp(created_at).isoformat()
+            })
+    return jsonify(image_files)
 
 
 if __name__ == '__main__':
