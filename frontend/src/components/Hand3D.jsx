@@ -22,8 +22,8 @@ const Hand3D = ({ handData }) => {
   ];
 
   const generateCylinder = (start, end, color) => {
-    const startVector = new THREE.Vector3(start.x * 8 - 4, -start.y * 8 + 4, -start.z * 8 - 2);
-    const endVector = new THREE.Vector3(end.x * 8 - 4, -end.y * 8 + 4, -end.z * 8 - 2);
+    const startVector = new THREE.Vector3(start.x * 8 - 2.5, -start.y * 8 + 4, -start.z * 8 - 2);
+    const endVector = new THREE.Vector3(end.x * 8 - 2.5, -end.y * 8 + 4, -end.z * 8 - 2);
     const midPoint = startVector.clone().add(endVector).multiplyScalar(0.5);
     const direction = new THREE.Vector3().subVectors(endVector, startVector);
     const length = direction.length();
@@ -51,9 +51,8 @@ const Hand3D = ({ handData }) => {
       <ambientLight intensity={0.7} />
       <pointLight position={[10, 10, 10]} />
 
-      {/* Rotate the entire hand model */}
-      <group rotation={[0, Math.PI, 0]}> {/* Rotates 180° around Y-axis */}
-        {/* Render each hand */}
+      {/* Render each hand */}
+      <group>
         {handData.map((hand, handIndex) => (
           <React.Fragment key={`hand-${handIndex}`}>
             {/* Palm Connections */}
@@ -76,7 +75,7 @@ const Hand3D = ({ handData }) => {
                 key={`joint-${handIndex}-${idx}`}
                 args={[0.12, 32, 32]} // Slightly smaller joints
                 position={[
-                  landmark.x * 8 - 4,
+                  landmark.x * 8 - 2.5,
                   -landmark.y * 8 + 4,
                   -landmark.z * 8 - 2,
                 ]}
