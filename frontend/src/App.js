@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import InstrumentSelector from "./components/InstrumentSelector";
+import About from "./components/About";
+import AlbumCovers from "./components/AlbumCovers";
 
 const App = () => {
   const [selectedInstrument, setSelectedInstrument] = useState("piano");
@@ -42,7 +44,8 @@ const App = () => {
               </>
             }
           />
-
+          <Route path="/about" element={<About />} />
+         <Route path="/albumcovers" element={<AlbumCovers />} />
         </Routes>
       </div>
     </Router>
