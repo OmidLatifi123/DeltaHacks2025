@@ -1,40 +1,28 @@
-import React, { Suspense } from "react";
+import React from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, useGLTF, Html } from "@react-three/drei";
 
 const ElectricPianoModel = () => {
-  const { scene } = useGLTF("/3D-Models/ElectricPiano.glb", true);
+  const { scene } = useGLTF("/3D-Models/ElectricPiano.glb");
 
   return (
-    <primitive
-      object={scene}
-      scale={1}
-      position={[0, -1, 0]}
-      rotation={[Math.PI / 6, -Math.PI / 2, 0]} // Adjust rotation here
-    />
+    <>
+      <primitive object={scene} scale={0.5} />
+      <Html position={[0, 1, 0]}>
+        <div
+          style={{
+            color: "white",
+            background: "rgba(0,0,0,0.7)",
+            padding: "5px",
+            borderRadius: "5px",
+          }}
+        >
+          Piano Model
+        </div>
+      </Html>
+    </>
   );
 };
 
-const ElectricPianoCanvas = () => {
-  return (
-    <Canvas
-      style={{ height: "600px", width: "100%" }}
-      camera={{ position: [0, 2, 10], fov: 50 }}
-    >
-      <Suspense fallback={<div>Loading...</div>}>
-        {/* Lighting */}
-        <ambientLight intensity={0.6} />
-        <pointLight position={[10, 10, 10]} />
-        <pointLight position={[-10, -10, -10]} />
+export default ElectricPianoModel;
 
-        {/* 3D Model */}
-        <ElectricPianoModel />
-
-        {/* Orbit Controls */}
-        <OrbitControls enableZoom={true} />
-      </Suspense>
-    </Canvas>
-  );
-};
-
-export default ElectricPianoCanvas;

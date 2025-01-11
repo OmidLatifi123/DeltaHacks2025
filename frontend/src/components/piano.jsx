@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Hand3D from "./Hand3D";
 import WebcamFeed from "./WebcamFeed";
-import ElectricPianoCanvas from "./3D-Models/ElectricPianoModel";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 const pianoKeys = [
   { note: "C", x_min: 270, x_max: 285, y_min: 330, y_max: 350 },
@@ -28,6 +29,7 @@ const Piano = () => {
         setBackendStatus(response.data.message);
       } catch (err) {
         console.error("Failed to start piano backend:", err);
+        //setBackendStatus("Failed to start piano backend. Ensure the backend is running.");
       }
     };
     startPianoBackend();
@@ -54,14 +56,14 @@ const Piano = () => {
     const canvasHeight = 800; // Fixed canvas height
     const backendWidth = 640; // Backend canvas width
     const backendHeight = 480; // Backend canvas height
-
+  
     return pianoKeys.map((key, index) => {
       // Scale positions and sizes proportionally to the canvas size
       const left = `${(key.x_min / backendWidth) * canvasWidth}px`;
       const top = `${(key.y_min / backendHeight) * canvasHeight}px`;
       const width = `${((key.x_max - key.x_min) / backendWidth) * canvasWidth}px`;
       const height = `${((key.y_max - key.y_min) / backendHeight) * canvasHeight}px`;
-
+  
       return (
         <div
           key={index}
@@ -87,21 +89,23 @@ const Piano = () => {
       );
     });
   };
-
+  
   return (
     <div
       style={{
         fontFamily: "Arial, sans-serif",
-        padding: "20px",
         textAlign: "center",
+        paddingTop: "5%"
       }}
     >
+          <Navbar />
+
       <h1>Digital Instrument - Virtual Piano</h1>
       <p style={{ color: backendStatus.includes("Failed") ? "red" : "green" }}>
         {backendStatus}
       </p>
 
-      {/* Main container to hold 3D piano, hand visualization, and keys */}
+      {/* Main container to hold 3D hand and key overlay */}
       <div
         style={{
           width: "90%",
@@ -112,24 +116,10 @@ const Piano = () => {
           overflow: "hidden",
         }}
       >
-        {/* Electric Piano 3D Model */}
-        <div
-          style={{
-            position: "absolute",
-            top: "10%", // Adjusted position
-            left: 0,
-            width: "100%",
-            height: "40%",
-            zIndex: 1, // Below hand and keys
-          }}
-        >
-          <ElectricPianoCanvas />
-        </div>
-
         {/* Piano keys */}
         <div
           style={{
-            backgroundColor: "rgba(186, 186, 186, 0.5)",
+            backgroundColor: "rgba(0, 255, 0, 0.9)",
             position: "absolute",
             top: 0,
             left: 0,
@@ -159,6 +149,7 @@ const Piano = () => {
 
       {/* Import the new WebcamFeed component */}
       <WebcamFeed />
+    
 
       <div>
         <h3>Hand Data</h3>
@@ -167,7 +158,7 @@ const Piano = () => {
         ) : (
           <p>Hand tracking data is being visualized above.</p>
         )}
-      </div>
+      </div>  <Footer />
     </div>
   );
 };
