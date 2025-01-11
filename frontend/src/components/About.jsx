@@ -2,21 +2,40 @@ import React from "react";
 import "./CSS/About.css";
 import Omid from "./CSS/Images/Omid.png";
 import Mark from "./CSS/Images/Mark.png";
+import SDG4 from "./CSS/Images/SDG4.png";
+import SDG10 from "./CSS/Images/SDG10.png";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
 const About = () => {
   return (
     <div className="about-container">
-                  <Navbar />
+      <Navbar />
 
-      <h1 className="about-title">About Digital Instrument</h1>
+      <h1 className="about-title">About OrchestrAir</h1>
       <p className="about-description">
-        <strong>Digital Instrument</strong> is a revolutionary platform designed to make music accessible to everyone. Whether you're a beginner or an expert, this tool empowers individuals, including disabled and underprivileged communities, to learn and play instruments for free, anywhere and anytime.
+        <strong>OrchestrAir</strong> is a revolutionary platform designed to make music accessible to everyone. Whether you're a beginner or an expert, this tool empowers individuals, including disabled and underprivileged communities, to learn and play instruments for free, anywhere and anytime.
       </p>
       <p className="about-mission">
         Our mission is to bridge the gap in music education and bring the joy of music to everyone, irrespective of their background or circumstances.
       </p>
+
+      <h2 className="sdg-title">Our Commitment to the UN Sustainable Development Goals</h2>
+      <div className="sdg-container">
+        <div className="sdg">
+          <img src={SDG4} alt="SDG 4: Quality Education" className="sdg-image" />
+          <p className="sdg-description">
+            <strong>SDG 4: Quality Education</strong> - We aim to provide inclusive and equitable quality education by making music education accessible to all, regardless of their financial or physical limitations.
+          </p>
+        </div>
+        <div className="sdg">
+          <img src={SDG10} alt="SDG 10: Reduced Inequalities" className="sdg-image" />
+          <p className="sdg-description">
+            <strong>SDG 10: Reduced Inequalities</strong> - Our platform empowers marginalized communities and individuals with disabilities to participate in the universal joy of music, reducing inequalities through innovative technology.
+          </p>
+        </div>
+      </div>
+
       <h2 className="developers-title">Meet the Developers</h2>
       <div className="developers">
         <div className="developer">
@@ -34,8 +53,8 @@ const About = () => {
           </p>
         </div>
       </div>
-      <Footer />
 
+      <Footer />
     </div>
   );
 };

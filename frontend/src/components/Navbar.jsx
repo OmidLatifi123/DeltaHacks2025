@@ -7,11 +7,11 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
-          🎹 Digital Piano
+          🎹 OrchestrAir
         </Link>
         <ul className="navbar-links">
           <li>
-            <Link to="/">Home</Link>
+            <Link to="/Instrument">Instrument</Link>
           </li>
           <li>
             <Link to="/about">About</Link>

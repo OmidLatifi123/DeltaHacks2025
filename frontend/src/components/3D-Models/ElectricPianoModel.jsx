@@ -1,28 +1,42 @@
-import React from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF, Html } from "@react-three/drei";
+import React, { useRef } from 'react';
+import { useGLTF } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils';
 
-const ElectricPianoModel = () => {
-  const { scene } = useGLTF("/3D-Models/ElectricPiano.glb");
+function ElectricPianoModel() {
+  const gltf = useGLTF('/3D-Models/ElectricPiano.glb'); // Ensure the path is correct
+  const modelRef = useRef();
+
+  // Clone the scene for independent instances
+  const clonedScene = clone(gltf.scene);
+
+  // Add rotation animation
+  useFrame(() => {
+    if (modelRef.current) {
+      modelRef.current.rotation.y += 0.01; // Smooth rotation on the Y-axis
+    }
+  });
 
   return (
     <>
-      <primitive object={scene} scale={0.5} />
-      <Html position={[0, 1, 0]}>
-        <div
-          style={{
-            color: "white",
-            background: "rgba(0,0,0,0.7)",
-            padding: "5px",
-            borderRadius: "5px",
-          }}
-        >
-          Piano Model
-        </div>
-      </Html>
+      {/* Add lighting */}
+      <ambientLight intensity={0.4} /> {/* Soft global lighting */}
+      <directionalLight
+        position={[5, 5, 5]} // Light source position
+        intensity={1.5} // Brightness
+        castShadow
+      />
+      <pointLight position={[-5, 5, 5]} intensity={0.7} /> {/* Dynamic lighting */}
+
+      {/* Piano model */}
+      <primitive
+        ref={modelRef}
+        object={clonedScene}
+        scale={0.6} // Adjust scale
+        position={[0, -0.5, 0]} // Adjust position for better visibility
+      />
     </>
   );
-};
+}
 
 export default ElectricPianoModel;
-

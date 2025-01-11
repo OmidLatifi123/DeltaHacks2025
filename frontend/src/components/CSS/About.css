@@ -1,66 +1,104 @@
 .about-container {
-    padding-top: 5%;
-    font-family: 'Arial', sans-serif;
-    margin: 0 auto;
-    text-align: center;
-    color: #333;
-  }
-  
-  .about-title {
-    font-size: 2.5rem;
-    color: #0056b3;
-    font-weight: bold;
-    margin-bottom: 20px;
-  }
-  
-  .about-description {
-    font-size: 1.2rem;
-    margin-bottom: 15px;
-    line-height: 1.6;
-  }
-  
-  .about-mission {
-    font-size: 1.1rem;
-    margin-bottom: 30px;
-    font-style: italic;
-  }
-  
-  .developers-title {
-    font-size: 2rem;
-    color: #333;
-    margin-bottom: 20px;
-  }
-  
-  .developers {
-    display: flex;
-    justify-content: space-around;
-    gap: 20px;
-  }
-  
-  .developer {
-    text-align: center;
-    flex: 1;
-  }
-  
-  .developer-image {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 15px;
-    border: 3px solid #0056b3;
-  }
-  
-  .developer-name {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #0056b3;
-    margin-bottom: 10px;
-  }
-  
-  .developer-description {
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #555;
-  }
-  
+  background: url('../CSS/Images/bg2.svg') no-repeat center center fixed;
+  background-size: cover;
+  font-family: 'Arial', sans-serif;
+  margin: 0 auto;
+  text-align: center;
+  color: #333;
+  background-color: #f9f9f9; /* Light background for readability */
+}
+
+.about-title {
+  padding: 5% 5%; /* Center content with margin on all sides */
+  font-size: 3rem;
+  color: #0056b3;
+  font-weight: bold;
+  margin-bottom: 30px;
+  text-transform: uppercase;
+}
+
+.about-description,
+.about-mission {
+  padding-left: 5%;
+  padding-right: 5%;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  line-height: 1.8;
+  color: #2c2c2c;
+}
+
+.about-mission {
+  font-style: italic;
+}
+
+.sdg-title {
+  font-size: 2.5rem;
+  color: #2c2c2c;
+  margin: 40px 0 20px;
+}
+
+.sdg-container {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap; /* Ensure responsiveness */
+  margin-bottom: 40px;
+}
+
+.sdg {
+  text-align: center;
+  max-width: 300px;
+}
+
+.sdg-image {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 15px;
+}
+
+.sdg-description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #2c2c2c;
+}
+
+.developers-title {
+  font-size: 2.5rem;
+  color: #0056b3;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+.developers {
+  display: flex;
+  justify-content: space-around;
+  gap: 30px;
+  flex-wrap: wrap; /* Ensure responsiveness */
+}
+
+.developer {
+  text-align: center;
+  max-width: 300px;
+}
+
+.developer-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+  border: 4px solid #0056b3;
+}
+
+.developer-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #0056b3;
+  margin-bottom: 10px;
+}
+
+.developer-description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #2c2c2c;
+}

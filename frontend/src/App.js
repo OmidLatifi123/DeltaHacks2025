@@ -4,6 +4,8 @@ import Navbar from "./components/Navbar";
 import InstrumentSelector from "./components/InstrumentSelector";
 import About from "./components/About";
 import AlbumCovers from "./components/AlbumCovers";
+import Home from "./components/Home";
+
 
 const App = () => {
   const [selectedInstrument, setSelectedInstrument] = useState("piano");
@@ -32,8 +34,9 @@ const App = () => {
         <Navbar />
         <Routes>
           {/* Define routes */}
+          <Route path="/" element={<Home />} />
           <Route
-            path="/"
+            path="/Instrument"
             element={
               <>
                 <h1>Virtual Instrument Player</h1>
