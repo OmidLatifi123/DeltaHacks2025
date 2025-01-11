@@ -95,6 +95,8 @@ def webcam():
                 draw_keys(frame)
 
                 hand_landmarks_data = []  # Clear previous frame data
+                keys_with_fingers = set()  # Combine notes detected across all hands
+
                 if results.multi_hand_landmarks:
                     for hand_landmarks in results.multi_hand_landmarks:
                         mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
@@ -110,7 +112,6 @@ def webcam():
                         hand_landmarks_data.append(single_hand_data)
 
                         # Detect fingers over keys
-                        keys_with_fingers = set()
                         for finger_tip_idx in [
                             mp_hands.HandLandmark.THUMB_TIP,
                             mp_hands.HandLandmark.INDEX_FINGER_TIP,
@@ -126,14 +127,14 @@ def webcam():
                                 if key['x_min'] <= fingertip_x <= key['x_max'] and key['y_min'] <= fingertip_y <= key['y_max']:
                                     keys_with_fingers.add(key['note'])
 
-                        # Play notes for detected keys
-                        for note in keys_with_fingers:
-                            play_midi(note)
+                # Play notes for detected keys
+                for note in keys_with_fingers:
+                    play_midi(note)
 
-                        # Stop notes for undetected keys
-                        for note in list(active_notes):
-                            if note not in keys_with_fingers:
-                                stop_midi(note)
+                # Stop notes for undetected keys
+                for note in list(active_notes):
+                    if note not in keys_with_fingers:
+                        stop_midi(note)
 
                 _, buffer = cv2.imencode('.jpg', frame)
                 frame = buffer.tobytes()

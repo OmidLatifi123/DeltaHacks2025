@@ -1,13 +1,25 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Hand3D from "./Hand3D";
+import WebcamFeed from "./WebcamFeed";
 
-// Piano Component
+const pianoKeys = [
+  { note: "C", x_min: 270, x_max: 285, y_min: 330, y_max: 350 },
+  { note: "D", x_min: 285, x_max: 300, y_min: 330, y_max: 350 },
+  { note: "E", x_min: 300, x_max: 315, y_min: 330, y_max: 350 },
+  { note: "F", x_min: 315, x_max: 330, y_min: 330, y_max: 350 },
+  { note: "G", x_min: 330, x_max: 345, y_min: 330, y_max: 350 },
+  { note: "A", x_min: 345, x_max: 360, y_min: 330, y_max: 350 },
+  { note: "B", x_min: 360, x_max: 375, y_min: 330, y_max: 350 },
+  { note: "C_high", x_min: 375, x_max: 390, y_min: 330, y_max: 350 },
+];
+
 const Piano = () => {
   const [handData, setHandData] = useState([]);
   const [error, setError] = useState(null);
-  const [backendStatus, setBackendStatus] = useState("Initializing...");
+  const [backendStatus, setBackendStatus] = useState("Everything's Good!");
 
+  // Start the piano backend (if applicable) when component mounts
   useEffect(() => {
     const startPianoBackend = async () => {
       try {
@@ -15,13 +27,13 @@ const Piano = () => {
         setBackendStatus(response.data.message);
       } catch (err) {
         console.error("Failed to start piano backend:", err);
-        setBackendStatus("Failed to start piano backend. Ensure the backend is running.");
+        //setBackendStatus("Failed to start piano backend. Ensure the backend is running.");
       }
     };
-
     startPianoBackend();
   }, []);
 
+  // Periodically fetch hand tracking data
   useEffect(() => {
     const fetchHandData = async () => {
       try {
@@ -37,50 +49,110 @@ const Piano = () => {
     return () => clearInterval(interval);
   }, []);
 
-  return (
-    <div style={{ fontFamily: "Arial, sans-serif", padding: "20px", textAlign: "center" }}>
-      <h1>Digital Instrument - Virtual Piano</h1>
-      <p style={{ color: backendStatus.includes("Failed") ? "red" : "green" }}>{backendStatus}</p>
-
-      <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "flex-start" }}>
-        <div>
-          <h3>Piano Keys</h3>
-          {/* Add piano keys here */}
+  const renderKeys = () => {
+    const canvasWidth = 0.9 * window.innerWidth; // 90% of the window width
+    const canvasHeight = 800; // Fixed canvas height
+    const backendWidth = 640; // Backend canvas width
+    const backendHeight = 480; // Backend canvas height
+  
+    return pianoKeys.map((key, index) => {
+      // Scale positions and sizes proportionally to the canvas size
+      const left = `${(key.x_min / backendWidth) * canvasWidth}px`;
+      const top = `${(key.y_min / backendHeight) * canvasHeight}px`;
+      const width = `${((key.x_max - key.x_min) / backendWidth) * canvasWidth}px`;
+      const height = `${((key.y_max - key.y_min) / backendHeight) * canvasHeight}px`;
+  
+      return (
+        <div
+          key={index}
+          style={{
+            position: "absolute",
+            left,
+            top,
+            width,
+            height,
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
+            border: "2px solid #FFF",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#FFF",
+            fontWeight: "bold",
+            fontSize: "0.7rem",
+            zIndex: 1,
+          }}
+        >
+          {key.note}
         </div>
-        <div>
-          <h3>3D Hand Tracking</h3>
+      );
+    });
+  };
+  
+  return (
+    <div
+      style={{
+        fontFamily: "Arial, sans-serif",
+        padding: "20px",
+        textAlign: "center",
+      }}
+    >
+      <h1>Digital Instrument - Virtual Piano</h1>
+      <p style={{ color: backendStatus.includes("Failed") ? "red" : "green" }}>
+        {backendStatus}
+      </p>
+
+      {/* Main container to hold 3D hand and key overlay */}
+      <div
+        style={{
+          width: "90%",
+          height: "800px",
+          border: "2px solid black",
+          margin: "auto",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Piano keys */}
+        <div
+          style={{
+            backgroundColor: "rgba(0, 255, 0, 0.9)",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            pointerEvents: "none", // Ensure clicks pass through
+            zIndex: 1, // Lower layer for keys
+          }}
+        >
+          {renderKeys()}
+        </div>
+
+        {/* 3D Hand Visualization */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 2, // Higher layer for hands
+          }}
+        >
           <Hand3D handData={handData} />
         </div>
       </div>
 
-      {/* Webcam Feed */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "10px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "320px",
-          height: "240px",
-          border: "1px solid black",
-          borderRadius: "8px", // Rounded corners
-          overflow: "hidden", // Ensure no scrollbars appear
-        }}
-      >
-        <iframe
-          src="http://127.0.0.1:5000/webcam"
-          style={{
-            width: "320px", // Match the width of the parent container
-            height: "240px", // Match the height of the parent container
-            border: "none",
-          }}
-          title="Webcam Feed"
-        ></iframe>
-      </div>
+      {/* Import the new WebcamFeed component */}
+      <WebcamFeed />
 
       <div>
         <h3>Hand Data</h3>
-        {error ? <p style={{ color: "red" }}>{error}</p> : <p>Hand tracking data is being visualized above.</p>}
+        {error ? (
+          <p style={{ color: "red" }}>{error}</p>
+        ) : (
+          <p>Hand tracking data is being visualized above.</p>
+        )}
       </div>
     </div>
   );

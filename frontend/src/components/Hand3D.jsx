@@ -18,7 +18,7 @@ const Hand3D = ({ handData }) => {
 
   const palmConnections = [
     [0, 5], [0, 9], [0, 13], [0, 17], [5, 9], [9, 13], [13, 17], [5, 17],
-    [0, 1], [5, 6], [9, 10], [13, 14], [17, 18] // Add thumb base and finger bases
+    [0, 1], [5, 6], [9, 10], [13, 14], [17, 18], // Thumb base and finger bases
   ];
 
   const generateCylinder = (start, end, color) => {
@@ -44,45 +44,48 @@ const Hand3D = ({ handData }) => {
     <Canvas
       style={{
         width: "100%", // Full width canvas
-        height: "800px", // Larger height for better view
+        height: "1000px", // Larger height for better view
       }}
       camera={{ position: [0, 0, 15], fov: 60 }} // Camera moved back for broader view
     >
       <ambientLight intensity={0.7} />
       <pointLight position={[10, 10, 10]} />
 
-      {/* Render each hand */}
-      {handData.map((hand, handIndex) => (
-        <React.Fragment key={`hand-${handIndex}`}>
-          {/* Palm Connections */}
-          {palmConnections.map(([start, end], idx) => (
-            <React.Fragment key={`palm-${handIndex}-${idx}`}>
-              {generateCylinder(hand[start], hand[end], "blue")}
-            </React.Fragment>
-          ))}
+      {/* Rotate the entire hand model */}
+      <group rotation={[0, Math.PI, 0]}> {/* Rotates 180° around Y-axis */}
+        {/* Render each hand */}
+        {handData.map((hand, handIndex) => (
+          <React.Fragment key={`hand-${handIndex}`}>
+            {/* Palm Connections */}
+            {palmConnections.map(([start, end], idx) => (
+              <React.Fragment key={`palm-${handIndex}-${idx}`}>
+                {generateCylinder(hand[start], hand[end], "blue")}
+              </React.Fragment>
+            ))}
 
-          {/* Finger Segments */}
-          {fingerSegments.map(([start, end], idx) => (
-            <React.Fragment key={`finger-${handIndex}-${idx}`}>
-              {generateCylinder(hand[start], hand[end], "white")}
-            </React.Fragment>
-          ))}
+            {/* Finger Segments */}
+            {fingerSegments.map(([start, end], idx) => (
+              <React.Fragment key={`finger-${handIndex}-${idx}`}>
+                {generateCylinder(hand[start], hand[end], "white")}
+              </React.Fragment>
+            ))}
 
-          {/* Render Joints */}
-          {hand.map((landmark, idx) => (
-            <Sphere
-              key={`joint-${handIndex}-${idx}`}
-              args={[0.12, 32, 32]} // Slightly smaller joints
-              position={[
-                landmark.x * 8 - 4,
-                -landmark.y * 8 + 4,
-                -landmark.z * 8 - 2,
-              ]}
-              material={new THREE.MeshStandardMaterial({ color: "red" })}
-            />
-          ))}
-        </React.Fragment>
-      ))}
+            {/* Render Joints */}
+            {hand.map((landmark, idx) => (
+              <Sphere
+                key={`joint-${handIndex}-${idx}`}
+                args={[0.12, 32, 32]} // Slightly smaller joints
+                position={[
+                  landmark.x * 8 - 4,
+                  -landmark.y * 8 + 4,
+                  -landmark.z * 8 - 2,
+                ]}
+                material={new THREE.MeshStandardMaterial({ color: "red" })}
+              />
+            ))}
+          </React.Fragment>
+        ))}
+      </group>
     </Canvas>
   );
 };
