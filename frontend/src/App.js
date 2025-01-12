@@ -5,6 +5,7 @@ import InstrumentSelector from "./components/InstrumentSelector";
 import About from "./components/About";
 import AlbumCovers from "./components/AlbumCovers";
 import Tutorial from "./components/Tutorial";
+import Tutorial2 from "./components/Tutorial2";
 import Home from "./components/Home";
 
 
@@ -51,6 +52,7 @@ const App = () => {
           <Route path="/about" element={<About />} />
          <Route path="/albumcovers" element={<AlbumCovers />} />
          <Route path="/tutorial" element={<Tutorial />} />
+         <Route path="/tutorial2" element={<Tutorial2 />} />
         </Routes>
       </div>
     </Router>

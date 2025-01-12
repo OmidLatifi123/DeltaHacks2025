@@ -25,62 +25,53 @@ const pianoKeys = [
   { note: "B", x_min: 367.5 * scaleFactor - offsetX, x_max: 386.25 * scaleFactor - offsetX, y_min: 260, y_max: 350 }
 ];
 
-const Tutorial = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [displayText, setDisplayText] = useState('');
-  const [isComplete, setIsComplete] = useState(false);
-  const [handData, setHandData] = useState([]);
-  const [isTyping, setIsTyping] = useState(false);
+const Tutorial2 = () => {
+  const [recentNote, setRecentNote] = useState('None');
+  const [currentKeyIndex, setCurrentKeyIndex] = useState(0);
+  const [message, setMessage] = useState('Click these keys in order to learn the piano!');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [isCorrect, setIsCorrect] = useState(false);
   const navigate = useNavigate();
-
-  const tutorialSteps = [
-    "Welcome to the Music Basics Tutorial! I'm your guide, Melody the Mascot.",
-    "This project is all about making music theory fun and interactive.",
-    "You'll learn how to play instruments, read sheet music, and compose songs!",
-    "Let's start with some basics of music theory. Did you know the musical alphabet is just A to G?"
-  ];
-
-  useEffect(() => {
-    let index = 0;
-    setIsTyping(true);
-    setIsComplete(false);
-    setDisplayText('');
-    
-    const interval = setInterval(() => {
-      if (index < tutorialSteps[currentStep].length) {
-        setDisplayText(tutorialSteps[currentStep].substring(0, index + 1));
-        index++;
-      } else {
-        setIsComplete(true);
-        setIsTyping(false);
-        clearInterval(interval);
-      }
-    }, 50);
-
-    return () => {
-      clearInterval(interval);
-      setIsTyping(false);
-    };
-  }, [currentStep]);
 
   useEffect(() => {
     const socket = io("http://127.0.0.1:5000");
-    
-    socket.on("hand_data", (data) => {
-      setHandData(data.hands);
+
+    socket.on("recent_key", (data) => {
+        console.log("Received recent key:", data.key);
+        if (data.key) {
+            setRecentNote(data.key);
+
+            if (data.key === pianoKeys[currentKeyIndex].note) {
+                setFeedbackMessage("Great job! Press Next to continue.");
+                setIsCorrect(true);
+            } else {
+                setFeedbackMessage("Uh Oh, that is incorrect, give it another try!");
+                setIsCorrect(false);
+            }
+        }
     });
 
     return () => {
-      socket.disconnect();
+        socket.disconnect();
     };
-  }, []);
+  }, [currentKeyIndex]);
 
   const handleNext = () => {
-    if (currentStep < tutorialSteps.length - 1 && !isTyping) {
-      setCurrentStep(currentStep + 1);
-    } else if (currentStep === tutorialSteps.length - 1) {
-      navigate('/tutorial2');
+    if (isCorrect) {
+      if (currentKeyIndex < pianoKeys.length - 1) {
+        setCurrentKeyIndex(currentKeyIndex + 1);
+        setMessage(`Click the ${pianoKeys[currentKeyIndex + 1].note} key!`);
+        setFeedbackMessage('');
+        setIsCorrect(false);
+      } else {
+        setMessage('Congratulations! You have mastered all the keys!');
+        setFeedbackMessage('');
+      }
     }
+  };
+
+  const handleFreestyle = () => {
+    navigate('/InstrumentSelector');
   };
 
   const renderKeys = () => {
@@ -92,11 +83,11 @@ const Tutorial = () => {
     return pianoKeys.map((key, index) => {
       const left = `${(key.x_min / backendWidth) * canvasWidth}px`;
       const top = `${(key.y_min / backendHeight) * canvasHeight}px`;
-      const width = `${(((key.x_max - key.x_min) ) / backendWidth) * canvasWidth}px`;
+      const width = `${(((key.x_max - key.x_min)) / backendWidth) * canvasWidth}px`;
       const height = `${(((key.y_max - key.y_min) + 200) / backendHeight) * canvasHeight}px`;
-    
+
       const isSharp = key.note.includes("#");
-    
+
       return (
         <div
           key={index}
@@ -129,15 +120,20 @@ const Tutorial = () => {
         <div className="mascot-container">
           <img src={MascotImage} alt="Mascot" className="mascot-image" />
           <div className="speech-bubble">
-            <p>{displayText}</p>
+            <div>
+              <p>{message}</p>
+              <p>Required note: <strong>{pianoKeys[currentKeyIndex]?.note}</strong></p>
+              <p>Recent note: <strong>{recentNote}</strong></p>
+            </div>
+            <div style={{ marginTop: "10px", fontWeight: "bold" }}>{feedbackMessage}</div>
           </div>
         </div>
         <button 
-          className={`next-button ${isComplete && !isTyping ? '' : 'disabled'}`} 
-          onClick={handleNext}
-          disabled={!isComplete || isTyping}
+          className={`next-button ${isCorrect || currentKeyIndex === pianoKeys.length - 1 ? '' : 'disabled'}`} 
+          onClick={currentKeyIndex === pianoKeys.length - 1 ? handleFreestyle : handleNext}
+          disabled={!isCorrect && currentKeyIndex !== pianoKeys.length - 1}
         >
-          {currentStep === tutorialSteps.length - 1 ? "Lesson 2: Music Theory" : "Next"}
+          {currentKeyIndex === pianoKeys.length - 1 ? 'Free Style' : 'Next'}
         </button>
       </div>
 
@@ -167,15 +163,15 @@ const Tutorial = () => {
                 zIndex: 2,
               }}
             >
-              <Hand3D handData={handData} />
+              <Hand3D handData={[]} />
             </div>
           </div>
           <WebcamFeed />
+          <Bird/>
         </div>
       </div>
-      <Bird />
     </div>
   );
 };
 
-export default Tutorial;
+export default Tutorial2;

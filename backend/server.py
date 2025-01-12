@@ -53,7 +53,7 @@ def generate_abstract_album_cover(notes):
     prompt = (
         "A detailed, vibrant abstract album cover featuring swirling, "
         "dynamic patterns of " + ", ".join(prompt_elements) + ". "
-        "Highly artistic and futuristic design, perfect for a modern album."
+        "Highly artistic, detailed, and modern design, perfect for a modern album."
     )
 
     # Generate the image
@@ -137,9 +137,13 @@ def webcam():
             results = hands.process(rgb_frame)
 
             # Process based on the instrument
+# Update this section in the webcam route inside generate_frames()
             if active_instrument == "piano":
                 piano.draw_keys(frame)
                 recent_notes = piano.process_hand_landmarks(results, frame, hand_landmarks_data)
+                if recent_notes:
+        # Emit the most recent key to the frontend
+                    socketio.emit("recent_key", {"key": recent_notes[-1] if recent_notes else ""})
             elif active_instrument == "drums":
                 drums.process_hand_landmarks(results, frame, hand_landmarks_data)
 

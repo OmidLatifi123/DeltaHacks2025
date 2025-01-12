@@ -4,7 +4,9 @@ import { OrbitControls } from '@react-three/drei';
 import './CSS/Home.css';
 import ElectricPianoModel from './3D-Models/ElectricPianoModel';
 import DrumsModel from './3D-Models/Drums';
-import Bird from './Bird'; // Import Bird component
+import Bird from './Bird'; 
+import Footer from "./Footer";
+
 
 function Home() {
   return (
@@ -65,9 +67,8 @@ function Home() {
           </div>
         </div>
       </section>
-
-      {/* Add the Bird Component */}
       <Bird />
+      <Footer/>
     </div>
   );
 }

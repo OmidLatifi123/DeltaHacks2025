@@ -54,7 +54,7 @@ const About = () => {
           </p>
         </div>
       </div>
-
+<Bird/>
       <Footer />
     </div>
   );

@@ -71,9 +71,10 @@ def draw_keys(frame):
             cv2.line(frame, tuple(shape[2]), tuple(shape[1]), color=(0, 0, 0), thickness=2)  # Right side
 
 def process_hand_landmarks(results, frame, hand_landmarks_data):
+    global recent_notes
     keys_with_fingers = set()
     hand_landmarks_data.clear()
-    """Detect fingers over keys and play notes."""
+
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
@@ -107,6 +108,10 @@ def process_hand_landmarks(results, frame, hand_landmarks_data):
     for note in list(active_notes):
         if note not in keys_with_fingers:
             stop_midi(note)
+
+    if keys_with_fingers:
+        recent_notes = list(keys_with_fingers)  # Update recent_notes with the currently played keys
+
     return recent_notes
 
 def play_midi(note):
