@@ -6,26 +6,26 @@ import './CSS/Tutorial.css';
 import MascotImage from './CSS/Images/Mascot.png';
 import Bird from './Bird';
 import { useNavigate } from 'react-router-dom';
+import PianoKey from './PianoKey';
 
-const scaleFactor = 1.7;
-const offsetX = 200; // Move keys more left by this value
+const X_OFFSET = -120; // Adjust this value to shift keys left/right
+const Y_OFFSET = -180; // Adjust this value to shift keys up/down
 
 const pianoKeys = [
-  { note: "C", x_min: 255 * scaleFactor - offsetX, x_max: 273.75 * scaleFactor - offsetX, y_min: 260, y_max: 350 },
-  { note: "C#", x_min: 268.125 * scaleFactor - offsetX, x_max: 275.375 * scaleFactor - offsetX, y_min: 260, y_max: 250 },
-  { note: "D", x_min: 273.75 * scaleFactor - offsetX, x_max: 292.5 * scaleFactor - offsetX, y_min: 260, y_max: 350 },
-  { note: "D#", x_min: 287.625 * scaleFactor - offsetX, x_max: 294.875 * scaleFactor - offsetX, y_min: 260, y_max: 250 },
-  { note: "E", x_min: 292.5 * scaleFactor - offsetX, x_max: 311.25 * scaleFactor - offsetX, y_min: 260, y_max: 350 },
-  { note: "F", x_min: 311.25 * scaleFactor - offsetX, x_max: 330 * scaleFactor - offsetX, y_min: 260, y_max: 350 },
-  { note: "F#", x_min: 324.375 * scaleFactor - offsetX, x_max: 331.625 * scaleFactor - offsetX, y_min: 260, y_max: 250 },
-  { note: "G", x_min: 330 * scaleFactor - offsetX, x_max: 348.75 * scaleFactor - offsetX, y_min: 260, y_max: 350 },
-  { note: "G#", x_min: 343.875 * scaleFactor - offsetX, x_max: 351.125 * scaleFactor - offsetX, y_min: 260, y_max: 250 },
-  { note: "A", x_min: 348.75 * scaleFactor - offsetX, x_max: 367.5 * scaleFactor - offsetX, y_min: 260, y_max: 350 },
-  { note: "A#", x_min: 362.625 * scaleFactor - offsetX, x_max: 369.875 * scaleFactor - offsetX, y_min: 260, y_max: 250 },
-  { note: "B", x_min: 367.5 * scaleFactor - offsetX, x_max: 386.25 * scaleFactor - offsetX, y_min: 260, y_max: 350 },
-  { note: "C_High", x_min: 386.25 * scaleFactor - offsetX, x_max: 405 * scaleFactor - offsetX, y_min: 260, y_max: 350 }
+  { note: "C", x_min: 255 + X_OFFSET, x_max: 273.75 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 350 + Y_OFFSET },
+  { note: "C#", x_min: 268.125 + X_OFFSET, x_max: 279.375 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 320 + Y_OFFSET },
+  { note: "D", x_min: 273.75 + X_OFFSET, x_max: 292.5 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 350 + Y_OFFSET },
+  { note: "D#", x_min: 287.625 + X_OFFSET, x_max: 298.875 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 320 + Y_OFFSET },
+  { note: "E", x_min: 292.5 + X_OFFSET, x_max: 311.25 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 350 + Y_OFFSET },
+  { note: "F", x_min: 311.25 + X_OFFSET, x_max: 330 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 350 + Y_OFFSET },
+  { note: "F#", x_min: 324.375 + X_OFFSET, x_max: 335.625 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 320 + Y_OFFSET },
+  { note: "G", x_min: 330 + X_OFFSET, x_max: 348.75 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 350 + Y_OFFSET },
+  { note: "G#", x_min: 343.875 + X_OFFSET, x_max: 355.125 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 320 + Y_OFFSET },
+  { note: "A", x_min: 348.75 + X_OFFSET, x_max: 367.5 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 350 + Y_OFFSET },
+  { note: "A#", x_min: 362.625 + X_OFFSET, x_max: 373.875 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 320 + Y_OFFSET },
+  { note: "B", x_min: 367.5 + X_OFFSET, x_max: 386.25 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 350 + Y_OFFSET },
+  { note: "C_High", x_min: 386.25 + X_OFFSET, x_max: 405 + X_OFFSET, y_min: 260 + Y_OFFSET, y_max: 350 + Y_OFFSET }
 ];
-
 
 const Tutorial = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -33,6 +33,7 @@ const Tutorial = () => {
   const [isComplete, setIsComplete] = useState(false);
   const [handData, setHandData] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [activeKeys, setActiveKeys] = useState([]);
   const navigate = useNavigate();
 
   const tutorialSteps = [
@@ -41,6 +42,48 @@ const Tutorial = () => {
     "You'll learn how to play instruments, read sheet music, and compose songs!",
     "Let's start with some basics of music theory. Did you know the musical alphabet is just A to G?"
   ];
+
+  useEffect(() => {
+    const socket = io("http://127.0.0.1:5000");
+    
+    socket.on("hand_data", (data) => {
+      setHandData(data.hands);
+      processHandData(data.hands);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  const convertToCanvasCoordinates = (landmark) => {
+    // Adjust the conversion formula to match the new key positions
+    const xCanvas = -246.71 * landmark.x + 481.23 + X_OFFSET;
+    const yCanvas = 290.32 * landmark.y + 138.06 + Y_OFFSET;
+    return { x: xCanvas, y: yCanvas };
+  };
+
+  const isOverKey = (landmarkCanvas, pianoKey) => {
+    return (
+      pianoKey.x_min <= landmarkCanvas.x &&
+      landmarkCanvas.x <= pianoKey.x_max &&
+      pianoKey.y_min <= landmarkCanvas.y &&
+      landmarkCanvas.y <= pianoKey.y_max
+    );
+  };
+
+  const processHandData = (hands) => {
+    const newActiveKeys = [];
+    hands.forEach((hand) => {
+      const canvasCoords = convertToCanvasCoordinates(hand[8]);
+      pianoKeys.forEach((key) => {
+        if (isOverKey(canvasCoords, key)) {
+          newActiveKeys.push(key.note);
+        }
+      });
+    });
+    setActiveKeys(newActiveKeys);
+  };
 
   useEffect(() => {
     let index = 0;
@@ -65,18 +108,6 @@ const Tutorial = () => {
     };
   }, [currentStep]);
 
-  useEffect(() => {
-    const socket = io("http://127.0.0.1:5000");
-    
-    socket.on("hand_data", (data) => {
-      setHandData(data.hands);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
   const handleNext = () => {
     if (currentStep < tutorialSteps.length - 1 && !isTyping) {
       setCurrentStep(currentStep + 1);
@@ -88,42 +119,32 @@ const Tutorial = () => {
   const renderKeys = () => {
     const canvasWidth = 0.9 * window.innerWidth;
     const canvasHeight = 500;
-    const backendWidth = 1040;
-    const backendHeight = 1480;
+    const backendWidth = 640;
+    const backendHeight = 480;
 
     return pianoKeys.map((key, index) => {
-      const left = `${(key.x_min / backendWidth) * canvasWidth}px`;
-      const top = `${(key.y_min / backendHeight) * canvasHeight}px`;
-      const width = `${(((key.x_max - key.x_min) ) / backendWidth) * canvasWidth}px`;
-      const height = `${(((key.y_max - key.y_min) + 200) / backendHeight) * canvasHeight}px`;
-    
-      const isSharp = key.note.includes("#");
-    
+      // Calculate position while accounting for the offsets
+      const positionStyles = {
+        left: `${(key.x_min / backendWidth) * canvasWidth}px`,
+        top: `${(key.y_min / backendHeight) * canvasHeight}px`,
+        width: `${((key.x_max - key.x_min) / backendWidth) * canvasWidth}px`,
+        height: `${((key.y_max - key.y_min) / backendHeight) * canvasHeight}px`,
+        position: 'absolute',
+        pointerEvents: 'auto', // Enable hover effects
+      };
+
       return (
-        <div
+        <PianoKey
           key={index}
-          style={{
-            position: "absolute",
-            left,
-            top,
-            width,
-            height,
-            backgroundColor: isSharp ? "rgb(0, 0, 0)" : "rgb(255, 255, 255)",
-            color: isSharp ? "rgba(255, 255, 255, 0)" : "rgba(0, 0, 0, 1)",
-            border: "2px solid rgba(0, 0, 0, 1)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: "bold",
-            fontSize: "0.7rem",
-            zIndex: isSharp ? 2 : 1,
-          }}
-        >
-          {!isSharp && key.note}
-        </div>
+          note={key.note}
+          isActive={activeKeys.includes(key.note)}
+          isSharp={key.note.includes("#")}
+          positionStyles={positionStyles}
+        />
       );
     });
   };
+
 
   return (
     <div className="tutorial-container">
@@ -135,7 +156,7 @@ const Tutorial = () => {
           </div>
         </div>
         <button 
-          className={`next-button ${isComplete && !isTyping ? '' : 'disabled'}`} 
+          className={`next-button ${isComplete && !isTyping ? '' : 'disabled'}`}
           onClick={handleNext}
           disabled={!isComplete || isTyping}
         >

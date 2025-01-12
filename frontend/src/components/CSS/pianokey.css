@@ -1,0 +1,26 @@
+.piano-key {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.7rem;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  
+  .piano-key.natural {
+    background-color: rgb(255, 255, 255); /* White keys */
+    border: 1px solid #000;
+  }
+  
+  .piano-key.sharp {
+    background-color: rgb(0, 0, 0); /* Black keys */
+    color: rgba(255, 255, 255, 0); /* Invisible text */
+    z-index: 2;
+  }
+  
+  .piano-key.active {
+    transform: translateY(3px); /* Minimal hover effect */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+  }
+  
