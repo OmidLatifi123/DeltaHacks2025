@@ -12,7 +12,11 @@ import instruments.drums as drums
 import instruments.piano as piano
 from music21 import stream, note, chord, tempo, meter, metadata
 import time
+from AI_Utils import generate_notes_from_instructions
+from dotenv import load_dotenv
 
+
+load_dotenv()
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)
@@ -37,6 +41,61 @@ last_append_time = None
 # Ensure the notes folder exists
 notes_folder = "notes"
 os.makedirs(notes_folder, exist_ok=True)
+
+
+@app.route('/generate-notes', methods=['POST'])
+def generate_notes():
+    """
+    Generate notes based on user instructions received from the frontend.
+    """
+    data = request.get_json()
+    instructions = data.get('instructions')
+
+    if not instructions:
+        return jsonify({"status": "error", "message": "No instructions provided."}), 400
+
+    result = generate_notes_from_instructions(instructions)
+
+    if isinstance(result, list):
+        try:
+            # Create a filename with timestamp
+            pdf_filename = f"notes_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            pdf_path = os.path.join(notes_folder, pdf_filename)
+
+            # Create a music21 stream
+            sheet_music = stream.Stream()
+            sheet_music.metadata = metadata.Metadata()
+            sheet_music.metadata.title = "AI powered notes"
+            sheet_music.append(tempo.MetronomeMark(number=120))
+            sheet_music.append(meter.TimeSignature('4/4'))
+
+            # Add notes to the stream
+            for note_data in result:
+                n = note.Note(note_data["pitch"])
+                n.duration.quarterLength = note_data["duration"] * 2
+                n.volume.velocity = note_data["velocity"]
+                sheet_music.append(n)
+
+            # Write to PDF
+            sheet_music.write(fmt='musicxml.pdf', fp=pdf_path)
+
+            return jsonify({
+                "status": "success",
+                "message": "Notes generated successfully.",
+                "filename": pdf_filename
+            })
+        except Exception as e:
+            return jsonify({
+                "status": "error",
+                "message": f"Error creating sheet music: {str(e)}"
+            }), 500
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Failed to generate notes."
+        }), 500
+
+
 
 def generate_abstract_album_cover(notes):
     """
@@ -308,17 +367,22 @@ def toggle_recording():
 
 @app.route('/sheet-music', methods=['GET'])
 def get_sheet_music():
-    """List all sheet music files with metadata."""
+    """List all sheet music files with metadata, ordered by creation date."""
     sheet_music_files = []
     for filename in os.listdir(notes_folder):
-        if filename.endswith(('.pdf')):
+        if filename.endswith('.pdf'):
             file_path = os.path.join(notes_folder, filename)
             created_at = os.path.getctime(file_path)
             sheet_music_files.append({
                 "filename": filename,
                 "createdAt": datetime.fromtimestamp(created_at).isoformat()
             })
-    return jsonify(sheet_music_files)
+    
+    # Sort the list by createdAt in ascending order (oldest first)
+    sorted_files = sorted(sheet_music_files, key=lambda x: x['createdAt'])
+
+    return jsonify(sorted_files)
+
 
 @app.route('/sheet-music/<string:filename>', methods=['DELETE'])
 def delete_sheet_music(filename):

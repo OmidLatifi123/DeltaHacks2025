@@ -12,20 +12,22 @@ const SheetMusic = () => {
   const [sheetMusic, setSheetMusic] = useState([]);
   const [selectedPdf, setSelectedPdf] = useState(null);
   const [error, setError] = useState(null);
+  const [inputText, setInputText] = useState("");
+
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchSheetMusic = async () => {
-      try {
-        const response = await axios.get("http://127.0.0.1:5000/sheet-music");
-        setSheetMusic(response.data);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching sheet music:", err);
-        setError("Failed to fetch Sheet Music. Ensure the backend is running.");
-      }
-    };
+  const fetchSheetMusic = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:5000/sheet-music");
+      setSheetMusic(response.data);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching sheet music:", err);
+      setError("Failed to fetch Sheet Music. Ensure the backend is running.");
+    }
+  };
 
+  useEffect(() => {
     fetchSheetMusic();
   }, []);
 
@@ -46,6 +48,23 @@ const SheetMusic = () => {
 
   const closeModal = () => setSelectedPdf(null);
 
+  const handleGenerateNotes = async () => {
+    try {
+      const response = await axios.post("http://127.0.0.1:5000/generate-notes", {
+        instructions: inputText,
+      });
+      if (response.data.status === "success") {
+        alert("Notes generated successfully!");
+        fetchSheetMusic(); // Fetch updated sheet music
+      } else {
+        alert("Failed to generate notes.");
+      }
+    } catch (error) {
+      console.error("Error generating notes:", error);
+      alert("Failed to generate notes. Please try again.");
+    }
+  };
+
   return (
     <div
       style={{
@@ -58,6 +77,38 @@ const SheetMusic = () => {
       <Navbar />
       <h1>Sheet Music</h1>
       {error && <p style={{ color: "red" }}>{error}</p>}
+
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          placeholder="Enter music instructions"
+          style={{
+            padding: "10px",
+            width: "300px",
+            marginRight: "10px",
+            borderRadius: "5px",
+            border: "1px solid #ddd",
+          }}
+        />
+        <button
+          onClick={handleGenerateNotes}
+          style={{
+            padding: "10px 15px",
+            fontSize: "14px",
+            fontWeight: "bold",
+            color: "#fff",
+            backgroundColor: "#007BFF",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Generate Notes
+        </button>
+      </div>
+
       <div
         style={{
           display: "grid",
