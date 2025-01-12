@@ -20,20 +20,19 @@ const pianoKeys = [
   { note: "G#", x_min: 343.875, x_max: 355.125, y_min: 260, y_max: 320 },
   { note: "A", x_min: 348.75, x_max: 367.5, y_min: 260, y_max: 350 },
   { note: "A#", x_min: 362.625, x_max: 373.875, y_min: 260, y_max: 320 },
-  { note: "B", x_min: 367.5, x_max: 386.25, y_min: 260, y_max: 350 }
+  { note: "B", x_min: 367.5, x_max: 386.25, y_min: 260, y_max: 350 },
+  { note: "C_High", x_min: 386.25, x_max: 405, y_min: 260, y_max: 350 }
 ];
 
 
 const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
-    
   const [handData, setHandData] = useState([]);
+  const [activeKeys, setActiveKeys] = useState([]);
   const [error, setError] = useState(null);
   const [backendStatus, setBackendStatus] = useState("Everything's Good!");
   const [albumCover, setAlbumCover] = useState(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-
-  // Start the piano backend (if applicable) when component mounts
 
   useEffect(() => {
     const socket = io("http://127.0.0.1:5000"); // Ensure this matches your backend URL
@@ -47,48 +46,85 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
     };
   }, []);
 
+  const convertToCanvasCoordinates = (landmark) => {
+    const xCanvas = -246.71 * landmark.x + 481.23; // Flip and transform x
+    const yCanvas = 290.32 * landmark.y + 138.06; // Transform y
+    return { x: xCanvas, y: yCanvas };
+  };
+
+  const isOverKey = (landmarkCanvas, pianoKey) => {
+    return (
+      pianoKey.x_min <= landmarkCanvas.x &&
+      landmarkCanvas.x <= pianoKey.x_max &&
+      pianoKey.y_min <= landmarkCanvas.y &&
+      landmarkCanvas.y <= pianoKey.y_max
+    );
+  };
+
+  useEffect(() => {
+    const newActiveKeys = [];
+    handData.forEach((hand) => {
+      const canvasCoords = convertToCanvasCoordinates(hand[8]);
+        pianoKeys.forEach((key) => {
+          if (isOverKey(canvasCoords, key)) {
+            newActiveKeys.push(key.note);
+          }
+        });
+    });
+    setActiveKeys(newActiveKeys);
+  }, [handData]);
+
   const renderKeys = () => {
     const canvasWidth = 0.9 * window.innerWidth;
     const canvasHeight = 800;
-    const backendWidth = 640; 
-    const backendHeight = 480; 
-
+    const backendWidth = 640;
+    const backendHeight = 480;
+  
     return pianoKeys.map((key, index) => {
-      // Scale positions and sizes proportionally to the canvas size
       const left = `${(key.x_min / backendWidth) * canvasWidth}px`;
       const top = `${(key.y_min / backendHeight) * canvasHeight}px`;
       const width = `${((key.x_max - key.x_min) / backendWidth) * canvasWidth}px`;
       const height = `${((key.y_max - key.y_min) / backendHeight) * canvasHeight}px`;
-    
-      const isSharp = key.note.includes("#"); // Determine if the key is a sharp
-    
+  
+      const isSharp = key.note.includes("#");
+      const isActive = activeKeys.includes(key.note);
+  
+      const activeShift = isSharp ? 3 : 5; // Smaller shift for sharp keys
+  
       return (
         <div
           key={index}
           style={{
             position: "absolute",
             left,
-            top,
+            top: isActive
+              ? `${(key.y_min / backendHeight) * canvasHeight + activeShift}px`
+              : top,
             width,
             height,
-            backgroundColor: isSharp ? "rgb(0, 0, 0)" : "rgb(255, 255, 255)", // Black for sharp keys
-            color: isSharp ? "rgba(255, 255, 255, 0)" : "rgba(0, 0, 0, 1)", // Hide text for sharp keys
+            backgroundColor: isSharp
+              ? "rgb(0, 0, 0)" // Black for sharp keys
+              : "rgb(255, 255, 255)", // White for non-sharp keys
+            color: isSharp ? "rgba(255, 255, 255, 0)" : "rgba(0, 0, 0, 1)",
             border: "2px solid rgba(0, 0, 0, 1)",
+            boxShadow: isActive
+              ? "0px 2px 5px rgba(0, 0, 0, 0.5)" // Shadow for depth effect
+              : "none",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontWeight: "bold",
             fontSize: "0.7rem",
-            zIndex: isSharp ? 2 : 1, // Ensure sharp keys appear on top
+            zIndex: isSharp ? 2 : 1,
+            transition: "top 0.1s, height 0.1s", // Smooth animation for key press
           }}
         >
-          {!isSharp && key.note} {/* Render note label only for non-sharp keys */}
+          {!isSharp && key.note}
         </div>
       );
     });
-    
   };
-
+  
   const generateAlbumCover = async () => {
     setLoading(true);
     setProgress(0);
@@ -107,14 +143,14 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
       setError("Failed to generate album cover. Ensure the backend is running.");
     } finally {
       setLoading(false);
-      setTimeout(() => setProgress(0), 1000); // Reset progress after 1 second
+      setTimeout(() => setProgress(0), 1000);
     }
   };
 
   return (
     <div className="instrument-selector">
       <Navbar />
-      <h1> Free Play</h1>
+      <h1>Free Play</h1>
       <label htmlFor="instrument">Choose an instrument:</label>
       <select
         id="instrument"
@@ -123,58 +159,57 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
       >
         <option value="piano">Piano</option>
         <option value="drums">Drums</option>
-        {/* Add more instruments here */}
       </select>
 
       <p style={{ color: backendStatus.includes("Failed") ? "red" : "green" }}>
         {backendStatus}
       </p>
-<div
-  className="glass-container"
-  style={{
-    width: "90%",
-    height: "800px",
-    margin: "auto",
-    position: "relative",
-    overflow: "hidden",
-    background: "rgba(255, 255, 255, 0.1)",
-    backdropFilter: "blur(10px)",
-    WebkitBackdropFilter: "blur(10px)", // For Safari support
-    borderRadius: "20px",
-    border: "1px solid rgba(255, 255, 255, 0.18)",
-    boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
-  }}
->
-  {selectedInstrument === "piano" && (
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        pointerEvents: "none",
-        zIndex: 1,
-      }}
-    >
-      {renderKeys()}
-    </div>
-  )}
 
-  {/* 3D Hand Visualization */}
-  <div
-    style={{
-      position: "absolute",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      zIndex: 2,
-    }}
-  >
-    <Hand3D handData={handData} />
-  </div>
-</div>
+      <div
+        className="glass-container"
+        style={{
+          width: "90%",
+          height: "800px",
+          margin: "auto",
+          position: "relative",
+          overflow: "hidden",
+          background: "rgba(255, 255, 255, 0.1)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          borderRadius: "20px",
+          border: "1px solid rgba(255, 255, 255, 0.18)",
+          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
+        }}
+      >
+        {selectedInstrument === "piano" && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+          >
+            {renderKeys()}
+          </div>
+        )}
+
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: 2,
+          }}
+        >
+          <Hand3D handData={handData} />
+        </div>
+      </div>
 
       <WebcamFeed />
 
@@ -274,8 +309,8 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
           <p>Hand tracking data is being visualized above.</p>
         )}
       </div>
-      <Bird />
 
+      <Bird />
       <Footer />
     </div>
   );

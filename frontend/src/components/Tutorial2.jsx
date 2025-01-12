@@ -22,8 +22,10 @@ const pianoKeys = [
   { note: "G#", x_min: 343.875 * scaleFactor - offsetX, x_max: 351.125 * scaleFactor - offsetX, y_min: 260, y_max: 250 },
   { note: "A", x_min: 348.75 * scaleFactor - offsetX, x_max: 367.5 * scaleFactor - offsetX, y_min: 260, y_max: 350 },
   { note: "A#", x_min: 362.625 * scaleFactor - offsetX, x_max: 369.875 * scaleFactor - offsetX, y_min: 260, y_max: 250 },
-  { note: "B", x_min: 367.5 * scaleFactor - offsetX, x_max: 386.25 * scaleFactor - offsetX, y_min: 260, y_max: 350 }
+  { note: "B", x_min: 367.5 * scaleFactor - offsetX, x_max: 386.25 * scaleFactor - offsetX, y_min: 260, y_max: 350 },
+  { note: "C_High", x_min: 386.25 * scaleFactor - offsetX, x_max: 405 * scaleFactor - offsetX, y_min: 260, y_max: 350 }
 ];
+
 
 const Tutorial2 = () => {
   const [recentNote, setRecentNote] = useState('None');

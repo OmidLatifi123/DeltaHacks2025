@@ -11,7 +11,7 @@ midi_out = pygame.midi.Output(pygame.midi.get_default_output_id())
 
 # MIDI note numbers for a single octave
 midi_note_numbers = {
-    "C": 60, "C#": 61, "D": 62, "D#": 63, "E": 64, "F": 65, "F#": 66, "G": 67, "G#": 68, "A": 69, "A#": 70, "B": 71
+    "C": 60, "C#": 61, "D": 62, "D#": 63, "E": 64, "F": 65, "F#": 66, "G": 67, "G#": 68, "A": 69, "A#": 70, "B": 71, "C_High": 72
 }
 
 keys = [ 
@@ -28,7 +28,8 @@ keys = [
     {'note': 'F', 'shape': np.array([[200, 300], [250, 300], [250, 350], [200, 350]], np.int32), 'type': 'white_extension'},
     {'note': 'G', 'shape': np.array([[250, 300], [300, 300], [300, 350], [250, 350]], np.int32), 'type': 'white_extension'},
     {'note': 'A', 'shape': np.array([[300, 300], [350, 300], [350, 350], [300, 350]], np.int32), 'type': 'white_extension'},
-    {'note': 'B', 'shape': np.array([[350, 300], [400, 300], [400, 350], [350, 350]], np.int32), 'type': 'white_extension'},   
+    {'note': 'B', 'shape': np.array([[350, 300], [400, 300], [400, 350], [350, 350]], np.int32), 'type': 'white_extension'},
+    {'note': 'C_High', 'shape': np.array([[400, 200], [450, 200], [450, 350], [400, 350]], np.int32), 'type': 'white'},  
 
     # Black keys
     {'note': 'C#', 'shape': np.array([[85, 200], [115, 200], [115, 300], [85, 300]], np.int32), 'type': 'black'},
@@ -56,8 +57,6 @@ def draw_keys(frame):
             cv2.line(frame, tuple(shape[0]), tuple(shape[3]), color=(0, 0, 0), thickness=2)  # Left side
             cv2.line(frame, tuple(shape[0]), tuple(shape[1]), color=(0, 0, 0), thickness=2)  # top side
             cv2.line(frame, tuple(shape[2]), tuple(shape[1]), color=(0, 0, 0), thickness=2)  # Right side
-            cv2.putText(frame, key['note'], (x_min + 10, y_min - 10), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
         elif key['type'] == 'black':
             # Draw the black key
             cv2.fillPoly(frame, [key['shape']], (0, 0, 0))
