@@ -5,6 +5,8 @@ import Hand3D from "./Hand3D";
 import WebcamFeed from "./WebcamFeed";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import Bird from './Bird'; // Import Bird component
+import './CSS/piano.css';
 
 const pianoKeys = [
   { note: "C", x_min: 255, x_max: 273.75, y_min: 330, y_max: 350 },
@@ -105,7 +107,7 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
   return (
     <div className="instrument-selector">
       <Navbar />
-
+      <h1> Free Play</h1>
       <label htmlFor="instrument">Choose an instrument:</label>
       <select
         id="instrument"
@@ -120,47 +122,52 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
       <p style={{ color: backendStatus.includes("Failed") ? "red" : "green" }}>
         {backendStatus}
       </p>
+<div
+  className="glass-container"
+  style={{
+    width: "90%",
+    height: "800px",
+    margin: "auto",
+    position: "relative",
+    overflow: "hidden",
+    background: "rgba(255, 255, 255, 0.1)",
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)", // For Safari support
+    borderRadius: "20px",
+    border: "1px solid rgba(255, 255, 255, 0.18)",
+    boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
+  }}
+>
+  {selectedInstrument === "piano" && (
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        zIndex: 1,
+      }}
+    >
+      {renderKeys()}
+    </div>
+  )}
 
-      <div
-        style={{
-          width: "90%",
-          height: "800px",
-          border: "2px solid black",
-          margin: "auto",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {selectedInstrument === "piano" && (
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              pointerEvents: "none",
-              zIndex: 1,
-            }}
-          >
-            {renderKeys()}
-          </div>
-        )}
-
-        {/* 3D Hand Visualization */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            zIndex: 2, // Higher layer for hands
-          }}
-        >
-          <Hand3D handData={handData} />
-        </div>
-      </div>
+  {/* 3D Hand Visualization */}
+  <div
+    style={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      zIndex: 2,
+    }}
+  >
+    <Hand3D handData={handData} />
+  </div>
+</div>
 
       <WebcamFeed />
 
@@ -260,6 +267,7 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
           <p>Hand tracking data is being visualized above.</p>
         )}
       </div>
+      <Bird />
 
       <Footer />
     </div>

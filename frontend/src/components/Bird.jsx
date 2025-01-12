@@ -9,7 +9,7 @@ function Bird() {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [direction, setDirection] = useState('right');
   const [isTextboxOpen, setIsTextboxOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([{ text: "Hey I'm Melody, your virtual music tutor, ask me anything!", type: 'received' }]);
   const [input, setInput] = useState('');
   const birdRef = useRef();
 

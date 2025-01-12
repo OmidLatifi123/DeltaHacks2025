@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./CSS/albumcovers.css";
+import Bird from './Bird'; // Import Bird component
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 

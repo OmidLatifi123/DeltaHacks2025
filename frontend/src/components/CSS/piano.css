@@ -1,11 +1,135 @@
-@keyframes fadeOut {
-    0% {
-      opacity: 0.8;
-      transform: scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(1.5);
-    }
-  }
-  
+/* piano.css */
+
+.instrument-selector {
+  margin-top: 2%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  min-height: 100vh;
+}
+
+.instrument-selector label {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.instrument-selector select {
+  font-size: 16px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 2px solid #007BFF;
+  margin-bottom: 20px;
+  outline: none;
+}
+
+.instrument-selector select:focus {
+  border-color: #0056b3;
+}
+
+.instrument-selector button {
+  font-size: 16px;
+  padding: 10px 20px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.instrument-selector button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.instrument-selector button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.instrument-selector p {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.instrument-selector .glass-container {
+  position: relative;
+  width: 90%;
+  height: 800px;
+  margin: auto;
+  overflow: hidden;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.instrument-selector .glass-container div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.instrument-selector .glass-container .hand-visualization {
+  z-index: 2;
+}
+
+.instrument-selector .progress-bar-container {
+  margin: 20px auto;
+  width: 50%;
+  background-color: #ccc;
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.instrument-selector .progress-bar {
+  background-color: #007BFF;
+  height: 100%;
+  width: 0;
+  transition: width 0.5s ease;
+}
+
+.instrument-selector img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.instrument-selector .download-button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.instrument-selector .download-button:hover {
+  background-color: #218838;
+}
+
+.glass-container {
+  position: relative;
+  width: 90%;
+  height: 800px;
+  margin: auto;
+  overflow: hidden;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1); /* Translucent background */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); /* Soft shadow */
+  backdrop-filter: blur(10px); /* Blur effect */
+  -webkit-backdrop-filter: blur(10px); /* Blur effect for Safari */
+  border: 1px solid rgba(255, 255, 255, 0.18); /* Soft border */
+}
+

@@ -4,6 +4,7 @@ import Omid from "./CSS/Images/Omid.png";
 import Mark from "./CSS/Images/Mark.png";
 import SDG4 from "./CSS/Images/SDG4.png";
 import SDG10 from "./CSS/Images/SDG10.png";
+import Bird from './Bird'; // Import Bird component
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
