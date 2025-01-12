@@ -1,62 +1,29 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Canvas } from "@react-three/fiber";
 import { Sphere, Cylinder } from "@react-three/drei";
 import * as THREE from "three";
 
 const Hand3D = ({ handData }) => {
-  const fingerSegments = useMemo(() => [
+  if (!handData || handData.length === 0) {
+    return <div style={{ color: "red" }}>No hand data available.</div>;
+  }
+
+  const fingerSegments = [
     [0, 1], [1, 2], [2, 3], [3, 4], // Thumb
     [5, 6], [6, 7], [7, 8],         // Index
     [9, 10], [10, 11], [11, 12],    // Middle
     [13, 14], [14, 15], [15, 16],   // Ring
     [17, 18], [18, 19], [19, 20],   // Pinky
-  ], []);
+  ];
 
-  const palmConnections = useMemo(() => [
+  const palmConnections = [
     [0, 5], [0, 9], [0, 13], [0, 17], [5, 9], [9, 13], [13, 17], [5, 17],
     [0, 1], [5, 6], [9, 10], [13, 14], [17, 18], // Thumb base and finger bases
-  ], []);
+  ];
 
-  const hologramMaterial = useMemo(() => {
-    const material = new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 },
-        color: { value: new THREE.Color("#39ff14") }, // Neon green color
-      },
-      vertexShader: `
-        varying vec3 vNormal;
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform float time;
-        uniform vec3 color;
-        varying vec3 vNormal;
-        void main() {
-          float flicker = 0.8 + 0.2 * sin(time * 10.0 + gl_FragCoord.y * 0.05);
-          float noise = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
-          float intensity = 0.5 + 0.5 * noise;
-          gl_FragColor = vec4(color * flicker * intensity, 1.0);
-        }
-      `,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-    });
-
-    const animate = () => {
-      material.uniforms.time.value += 0.05;
-      requestAnimationFrame(animate);
-    };
-
-    animate();
-    return material;
-  }, []);
-
-  const generateCylinder = (start, end) => {
-    const startVector = new THREE.Vector3(start.x * 8 - 4, -start.y * 8 + 4, -start.z * 8 - 2);
-    const endVector = new THREE.Vector3(end.x * 8 - 4, -end.y * 8 + 4, -end.z * 8 - 2);
+  const generateCylinder = (start, end, color) => {
+    const startVector = new THREE.Vector3(start.x * 8 - 5.4, -start.y * 8 + 4.4, -start.z * 8 - 2);
+    const endVector = new THREE.Vector3(end.x * 8 - 5.4, -end.y * 8 + 4.4, -end.z * 8 - 2);
     const midPoint = startVector.clone().add(endVector).multiplyScalar(0.5);
     const direction = new THREE.Vector3().subVectors(endVector, startVector);
     const length = direction.length();
@@ -68,50 +35,52 @@ const Hand3D = ({ handData }) => {
         args={[0.15, 0.15, length, 16]}
         position={[midPoint.x, midPoint.y, midPoint.z]}
         rotation={new THREE.Euler().setFromRotationMatrix(orientation)}
-        material={hologramMaterial}
+        material={new THREE.MeshStandardMaterial({ color })}
       />
     );
   };
 
-  if (!handData || handData.length === 0) {
-    return <div style={{ color: "red" }}>No hand data available.</div>;
-  }
-
   return (
     <Canvas
       style={{
-        width: "100%",
-        height: "1000px",
+        width: "100%", // Full width canvas
+        height: "1000px", // Larger height for better view
       }}
-      camera={{ position: [0, 0, 15], fov: 60 }}
+      camera={{ position: [0, 0, 15], fov: 60 }} // Camera moved back for broader view
     >
       <ambientLight intensity={0.7} />
       <pointLight position={[10, 10, 10]} />
 
       {/* Rotate the entire hand model */}
-      <group rotation={[0, 0, 0]}> {/* Correct rotation */}
+      <group rotation={[0, Math.PI, 0]}> {/* Rotates 180° around Y-axis */}
+        {/* Render each hand */}
         {handData.map((hand, handIndex) => (
           <React.Fragment key={`hand-${handIndex}`}>
+            {/* Palm Connections */}
             {palmConnections.map(([start, end], idx) => (
               <React.Fragment key={`palm-${handIndex}-${idx}`}>
-                {generateCylinder(hand[start], hand[end])}
+                {generateCylinder(hand[start], hand[end], "blue")}
               </React.Fragment>
             ))}
+
+            {/* Finger Segments */}
             {fingerSegments.map(([start, end], idx) => (
               <React.Fragment key={`finger-${handIndex}-${idx}`}>
-                {generateCylinder(hand[start], hand[end])}
+                {generateCylinder(hand[start], hand[end], "white")}
               </React.Fragment>
             ))}
+
+            {/* Render Joints */}
             {hand.map((landmark, idx) => (
               <Sphere
                 key={`joint-${handIndex}-${idx}`}
-                args={[0.12, 32, 32]}
+                args={[0.12, 32, 32]} // Slightly smaller joints
                 position={[
-                  landmark.x * 8 - 4,
-                  -landmark.y * 8 + 4,
+                  landmark.x * 8 - 5.4,
+                  -landmark.y * 8 + 4.4,
                   -landmark.z * 8 - 2,
                 ]}
-                material={hologramMaterial}
+                material={new THREE.MeshStandardMaterial({ color: "red" })}
               />
             ))}
           </React.Fragment>

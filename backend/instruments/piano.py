@@ -60,7 +60,7 @@ def process_hand_landmarks(results, frame, hand_landmarks_data):
 
             # Extract and store hand landmarks for /hand-data endpoint
             hand_landmarks_data.append([
-                {"x": lm.x, "y": lm.y, "z": lm.z}
+                {"x": 1 - lm.x, "y": lm.y, "z": lm.z}
                 for lm in hand_landmarks.landmark
             ])
 

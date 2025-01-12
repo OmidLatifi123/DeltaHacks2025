@@ -7,15 +7,16 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 
 const pianoKeys = [
-  { note: "C", x_min: 270, x_max: 285, y_min: 330, y_max: 350 },
-  { note: "D", x_min: 285, x_max: 300, y_min: 330, y_max: 350 },
-  { note: "E", x_min: 300, x_max: 315, y_min: 330, y_max: 350 },
-  { note: "F", x_min: 315, x_max: 330, y_min: 330, y_max: 350 },
-  { note: "G", x_min: 330, x_max: 345, y_min: 330, y_max: 350 },
-  { note: "A", x_min: 345, x_max: 360, y_min: 330, y_max: 350 },
-  { note: "B", x_min: 360, x_max: 375, y_min: 330, y_max: 350 },
-  { note: "C_high", x_min: 375, x_max: 390, y_min: 330, y_max: 350 },
+  { note: "C", x_min: 255, x_max: 273.75, y_min: 330, y_max: 350 },
+  { note: "D", x_min: 273.75, x_max: 292.5, y_min: 330, y_max: 350 },
+  { note: "E", x_min: 292.5, x_max: 311.25, y_min: 330, y_max: 350 },
+  { note: "F", x_min: 311.25, x_max: 330, y_min: 330, y_max: 350 },
+  { note: "G", x_min: 330, x_max: 348.75, y_min: 330, y_max: 350 },
+  { note: "A", x_min: 348.75, x_max: 367.5, y_min: 330, y_max: 350 },
+  { note: "B", x_min: 367.5, x_max: 386.25, y_min: 330, y_max: 350 },
+  { note: "C_high", x_min: 386.25, x_max: 405, y_min: 330, y_max: 350 },
 ];
+
 
 const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
     

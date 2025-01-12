@@ -89,7 +89,7 @@ def process_hand_landmarks(results, frame, hand_landmarks_data):
             kick.mp_draw.draw_landmarks(frame, hand_landmarks, 
                                      kick.mp_hands.HAND_CONNECTIONS)
             hand_landmarks_data.append([
-            {"x": lm.x, "y": lm.y, "z": lm.z}
+            {"x": 1- lm.x, "y": lm.y, "z": lm.z}
             for lm in hand_landmarks.landmark
         ])
 
