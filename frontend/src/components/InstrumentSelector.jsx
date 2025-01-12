@@ -8,6 +8,12 @@ import Footer from "./Footer";
 import Bird from './Bird'; // Import Bird component
 import './CSS/piano.css';
 
+const canvasWidth = 0.9 * window.innerWidth;
+const canvasHeight = 800;
+const backendWidth = 640;
+const backendHeight = 480;
+let wasOverRecordingBox = false; // Tracks if the finger was previously over the button
+
 const pianoKeys = [
   { note: "C", x_min: 255, x_max: 273.75, y_min: 260, y_max: 350 },
   { note: "C#", x_min: 268.125, x_max: 279.375, y_min: 260, y_max: 320 },
@@ -33,6 +39,7 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
   const [albumCover, setAlbumCover] = useState(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => {
     const socket = io("http://127.0.0.1:5000"); // Ensure this matches your backend URL
@@ -75,10 +82,6 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
   }, [handData]);
 
   const renderKeys = () => {
-    const canvasWidth = 0.9 * window.innerWidth;
-    const canvasHeight = 800;
-    const backendWidth = 640;
-    const backendHeight = 480;
   
     return pianoKeys.map((key, index) => {
       const left = `${(key.x_min / backendWidth) * canvasWidth}px`;
@@ -147,6 +150,109 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
     }
   };
 
+  const renderRecordingArea = () => {
+    const rect = {
+      x_min: 690,
+      x_max: 705, // 15px width
+      y_min: 225,
+      y_max: 240, // 15px height
+    };
+  
+    const recordingBox = {
+      x_min: rect.x_min - 30, // Adjusted for label and padding
+      x_max: rect.x_max + 80, // Adjusted for label and padding
+      y_min: rect.y_min - 6, // Adjusted for label and padding
+      y_max: rect.y_max + 15, // Adjusted for label and padding
+    };
+  
+    const mappedRecordingBox = {
+      x_min: (recordingBox.x_min * backendWidth) / canvasWidth,
+      x_max: (recordingBox.x_max * backendWidth) / canvasWidth,
+      y_min: (recordingBox.y_min * backendHeight) / canvasHeight,
+      y_max: (recordingBox.y_max * backendHeight) / canvasHeight,
+    };
+  
+    const isOverRecordingBox = handData.some((hand) => {
+      const canvasCoords = convertToCanvasCoordinates(hand[8]);
+      return isOverKey(canvasCoords, mappedRecordingBox);
+    });
+  
+    // Toggle recording state only when the finger enters the button from outside
+    if (isOverRecordingBox && !wasOverRecordingBox) {
+      toggleRecordingState(); // Moved async operation to a separate function
+    }
+  
+    // Update the "wasOverRecordingBox" state
+    wasOverRecordingBox = isOverRecordingBox;
+  
+    return (
+      <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+        {/* Highlight Box */}
+        <div
+          style={{
+            position: "absolute",
+            left: `${recordingBox.x_min}px`,
+            top: `${recordingBox.y_min}px`,
+            width: `${recordingBox.x_max - recordingBox.x_min}px`,
+            height: `${recordingBox.y_max - recordingBox.y_min}px`,
+            border: "3px solid black",
+            borderRadius: "10px",
+            backgroundColor: "rgba(0, 0, 0, 1.0)", // Red highlight
+            zIndex: 1,
+          }}
+        ></div>
+  
+        {/* Label Text */}
+        <span
+          style={{
+            position: "absolute",
+            left: `${rect.x_min + 40}px`,
+            top: `${rect.y_min + 3}px`,
+            color: "white",
+            fontSize: "16px",
+            fontWeight: "bold",
+            zIndex: 3,
+          }}
+        >
+          {isRecording ? "Stop" : "Rec"}
+        </span>
+  
+        {/* Record Button */}
+        <div
+          style={{
+            position: "absolute",
+            left: `${rect.x_min}px`,
+            top: `${rect.y_min}px`,
+            width: `${rect.x_max - rect.x_min}px`,
+            height: `${rect.y_max - rect.y_min}px`,
+            backgroundColor: isRecording ? "blue" : "red",
+            borderRadius: isRecording ? "0%" : "50%",
+            boxShadow: isRecording
+              ? "0 0 12px 4px rgba(0, 0, 255, 0.8)"
+              : "0 0 12px 4px rgba(255, 0, 0, 0.8)",
+            border: "3px solid white",
+            zIndex: 3,
+          }}
+        />
+      </div>
+    );
+  };
+  
+  // Extract async logic to a separate function
+  const toggleRecordingState = async () => {
+    try {
+      const response = await axios.post("http://127.0.0.1:5000/toggle-recording");
+      if (response.status === 200) {
+        setIsRecording((prev) => !prev);
+      }
+    } catch (error) {
+      console.error("Failed to toggle recording:", error);
+    }
+  };
+  
+  
+  
+
   return (
     <div className="instrument-selector">
       <Navbar />
@@ -181,6 +287,7 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
           boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
         }}
       >
+        {renderRecordingArea()}
         {selectedInstrument === "piano" && (
           <div
             style={{

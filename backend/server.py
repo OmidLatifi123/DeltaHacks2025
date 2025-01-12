@@ -10,6 +10,7 @@ import importlib
 from flask_socketio import SocketIO
 import instruments.drums as drums
 import instruments.piano as piano
+from music21 import stream, note
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -27,11 +28,13 @@ recent_notes = []
 # Ensure the Images folder exists
 images_folder = "Images"
 os.makedirs(images_folder, exist_ok=True)
-
-# Load the pipeline and move it to the appropriate device
 pipeline = None
+is_recording = False
+recorded_notes = []
 
-
+# Ensure the notes folder exists
+notes_folder = "notes"
+os.makedirs(notes_folder, exist_ok=True)
 
 def generate_abstract_album_cover(notes):
     """
@@ -87,6 +90,11 @@ def serve_image(filename):
     """Serve generated images."""
     return send_from_directory(images_folder, filename)
 
+@app.route('/notes/<path:filename>')
+def serve_sheet(filename):
+    """Serve generated images."""
+    return send_from_directory(notes_folder, filename)
+
 def load_instrument(name):
     """Dynamically load the instrument module."""
     global active_instrument
@@ -118,11 +126,46 @@ def get_hand_data():
     return jsonify({'hands': hand_landmarks_data})  
 
 
+def Create_Sheet_Music(recorded_notes):
+    # Create a new music21 stream
+    sheet_music = stream.Stream()
+
+    # Map note names to pitches
+    note_mapping = {
+         "C": "C4",
+        "C#": "C#4",
+        "D": "D4",
+        "D#": "D#4",
+        "E": "E4",
+        "F": "F4",
+        "F#": "F#4",
+        "G": "G4",
+        "G#": "G#4",
+        "A": "A4",
+        "A#": "A#4",
+        "B": "B4",
+        "C_High": "C5"
+    }
+
+    # Convert recorded notes into music21 notes
+    for pitch in recorded_notes:
+        if pitch in note_mapping:
+            # Create a quarter note for each pitch
+            n = note.Note(note_mapping[pitch])
+            n.quarterLength = 1  # Quarter note
+            sheet_music.append(n)
+        else:
+            print(f"Warning: Note '{pitch}' is not recognized and will be skipped.")
+
+
+    return sheet_music
+
 @app.route('/webcam')
 def webcam():
     """Stream webcam feed to the frontend."""
     def generate_frames():
         global recent_notes
+        global recorded_notes
         cap = cv2.VideoCapture(0)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -142,8 +185,17 @@ def webcam():
                 piano.draw_keys(frame)
                 recent_notes = piano.process_hand_landmarks(results, frame, hand_landmarks_data)
                 if recent_notes:
-        # Emit the most recent key to the frontend
-                    socketio.emit("recent_key", {"key": recent_notes[-1] if recent_notes else ""})
+                    if is_recording:
+                        if not recorded_notes or recent_notes[0] != recorded_notes[-1]:
+                            recorded_notes.extend(recent_notes)
+                    else:
+                        if recorded_notes:
+                            sheet_music = Create_Sheet_Music(recorded_notes)
+                            pdf_path = f"notes/output_sheet_music_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                            sheet_music.write(fmt='musicxml.pdf', fp=pdf_path)
+                            recorded_notes = []
+
+                    socketio.emit("recent_key", {"key": recent_notes[-1] if recent_notes else ""}) #Is this ever > 1 anyway?
             elif active_instrument == "drums":
                 drums.process_hand_landmarks(results, frame, hand_landmarks_data)
 
@@ -173,6 +225,35 @@ def get_album_covers():
             })
     return jsonify(image_files)
 
+@app.route('/toggle-recording', methods=['POST'])
+def toggle_recording():
+    """Toggle recording state."""
+    global is_recording
+    is_recording = not is_recording  # Toggle the state
+    print(f"Recording state: {is_recording}")
+    return jsonify({
+        "status": "success", 
+        "recording": is_recording
+    })
+
+@app.route('/sheet-music', methods=['GET'])
+def get_sheet_music():
+    """List all sheet music files with metadata."""
+    sheet_music_files = []
+    for filename in os.listdir(notes_folder):
+        if filename.endswith(('.pdf')):
+            file_path = os.path.join(notes_folder, filename)
+            created_at = os.path.getctime(file_path)
+            sheet_music_files.append({
+                "filename": filename,
+                "createdAt": datetime.fromtimestamp(created_at).isoformat()
+            })
+    return jsonify(sheet_music_files)
+
+@app.route('/Notes/<path:filename>')
+def serve_sheet_music(filename):
+    """Serve sheet music files."""
+    return send_from_directory(notes_folder, filename)
 
 if __name__ == '__main__':
     app.run(port=5000)

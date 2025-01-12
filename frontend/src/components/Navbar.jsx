@@ -20,6 +20,9 @@ const Navbar = () => {
           <Link to="/albumcovers">Album Covers</Link>
           </li>
           <li>
+          <Link to="/sheetmusic">Sheet Music</Link>
+          </li>
+          <li>
             <a href="/tutorial">Tutorial</a>
           </li>
         </ul>

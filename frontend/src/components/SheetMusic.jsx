@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
-const AlbumCover = () => {
+const SheetMusic = () => {
   const [albumCovers, setAlbumCovers] = useState([]);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const AlbumCover = () => {
   useEffect(() => {
     const fetchAlbumCovers = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:5000/album-covers");
+        const response = await axios.get("http://127.0.0.1:5000/sheet-music");
         setAlbumCovers(response.data);
         setError(null);
       } catch (err) {
@@ -71,7 +71,7 @@ const AlbumCover = () => {
             }}
           >
             <img
-              src={`http://127.0.0.1:5000/Images/${cover.filename}`}
+              src={`http://127.0.0.1:5000/notes/${cover.filename}`}
               alt={cover.filename}
               style={{
                 width: "100%",
@@ -90,7 +90,7 @@ const AlbumCover = () => {
               <button
                 onClick={() =>
                   downloadImage(
-                    `http://127.0.0.1:5000/Images/${cover.filename}`,
+                    `http://127.0.0.1:5000/notes/${cover.filename}`,
                     cover.filename
                   )
                 }
@@ -116,4 +116,4 @@ const AlbumCover = () => {
   );
 };
 
-export default AlbumCover;
+export default SheetMusic;
