@@ -245,15 +245,16 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
   // Extract async logic to a separate function
   const toggleRecordingState = async () => {
     try {
-      const response = await axios.post("http://127.0.0.1:5000/toggle-recording");
+      const response = await axios.post("http://127.0.0.1:5000/toggle-recording", {
+        isRecording: !isRecording,
+      });
       if (response.status === 200) {
-        setIsRecording((prev) => !prev);
+        setIsRecording(response.data.recording);
       }
     } catch (error) {
       console.error("Failed to toggle recording:", error);
     }
   };
-  
   
   
 
