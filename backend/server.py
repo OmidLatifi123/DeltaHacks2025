@@ -10,10 +10,12 @@ import importlib
 from flask_socketio import SocketIO
 import instruments.drums as drums
 import instruments.piano as piano
-from music21 import stream, note, chord, tempo, meter, metadata
+from music21 import stream, note, chord, tempo, meter, metadata, converter, midi
 import time
 from AI_Utils import generate_notes_from_instructions
+import subprocess
 from dotenv import load_dotenv
+
 
 
 load_dotenv()
@@ -402,6 +404,23 @@ def delete_sheet_music(filename):
 def serve_sheet_music(filename):
     """Serve sheet music files."""
     return send_from_directory(notes_folder, filename)
+
+@app.route('/sheet-music-player/<path:filename>', methods=['POST'])
+def play_musicxml(filename):
+    file_path = os.path.join(notes_folder, filename)
+    file_path = os.path.splitext(file_path)[0] + '.musicxml'
+    score = converter.parse(file_path)
+    midi_file_path = "output.mid"
+    mf = midi.translate.music21ObjectToMidiFile(score)
+    mf.open(midi_file_path, 'wb')
+    mf.write()
+    mf.close()
+
+    # Call the external script
+    subprocess.run(['python', 'play_midi.py', midi_file_path])
+    
+    return "Playback complete.", 200
+
 
 if __name__ == '__main__':
     app.run(port=5000)

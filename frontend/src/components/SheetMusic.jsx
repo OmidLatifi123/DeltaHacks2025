@@ -46,6 +46,15 @@ const SheetMusic = () => {
     }
   };
 
+  const playMusicSheet = async (filename) => {
+    try {
+      const response = await axios.post(`http://127.0.0.1:5000/sheet-music-player/${filename}`);
+    } catch (error) {
+      console.error("Error playing music:", error);
+      alert("Failed to play music. Please try again.");
+    }
+  };
+
   const closeModal = () => setSelectedPdf(null);
 
   const handleGenerateNotes = async () => {
@@ -53,12 +62,6 @@ const SheetMusic = () => {
       const response = await axios.post("http://127.0.0.1:5000/generate-notes", {
         instructions: inputText,
       });
-      if (response.data.status === "success") {
-        alert("Notes generated successfully!");
-        fetchSheetMusic(); // Fetch updated sheet music
-      } else {
-        alert("Failed to generate notes.");
-      }
     } catch (error) {
       console.error("Error generating notes:", error);
       alert("Failed to generate notes. Please try again.");
@@ -168,44 +171,84 @@ const SheetMusic = () => {
                 >
                   View
                 </button>
-                <button
-                  onClick={() => deleteSheetMusic(cover.filename)}
-                  style={{
-                    backgroundColor: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "8px",
-                    transition: "background-color 0.2s",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f0f0f0";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="28"
-                    height="28"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#666666"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                <div style={{ display: "flex", gap: "10px" }}>
+                  {/* Play Button with Speaker Icon */}
+                  <button
+                    onClick={() => playMusicSheet(cover.filename)}
+                    style={{
+                      backgroundColor: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "8px",
+                      transition: "background-color 0.2s",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f0f0f0";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
                   >
-                    <path d="M3 6h18" />
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    <line x1="10" y1="11" x2="10" y2="17" />
-                    <line x1="14" y1="11" x2="14" y2="17" />
-                  </svg>
-                </button>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#666666"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                    </svg>
+                  </button>
+                  {/* Existing Delete Button */}
+                  <button
+                    onClick={() => deleteSheetMusic(cover.filename)}
+                    style={{
+                      backgroundColor: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "8px",
+                      transition: "background-color 0.2s",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f0f0f0";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#666666"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3 6h18" />
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
