@@ -20,7 +20,7 @@ const Navbar = () => {
           <Link to="/albumcovers">Album Covers</Link>
           </li>
           <li>
-            <a href="#contact">Contact</a>
+            <a href="/tutorial">Tutorial</a>
           </li>
         </ul>
         <Link to="#get-started" className="navbar-cta">
