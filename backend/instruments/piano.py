@@ -29,7 +29,7 @@ keys = [
     {'note': 'G', 'shape': np.array([[250, 300], [300, 300], [300, 350], [250, 350]], np.int32), 'type': 'white_extension'},
     {'note': 'A', 'shape': np.array([[300, 300], [350, 300], [350, 350], [300, 350]], np.int32), 'type': 'white_extension'},
     {'note': 'B', 'shape': np.array([[350, 300], [400, 300], [400, 350], [350, 350]], np.int32), 'type': 'white_extension'},
-    {'note': 'C_High', 'shape': np.array([[400, 200], [450, 200], [450, 350], [400, 350]], np.int32), 'type': 'white'},  
+    {'note': 'C_High', 'shape': np.array([[400, 200], [450, 200], [450, 350], [400, 350]], np.int32), 'type': 'white_full'},
 
     # Black keys
     {'note': 'C#', 'shape': np.array([[85, 200], [115, 200], [115, 300], [85, 300]], np.int32), 'type': 'black'},
@@ -64,6 +64,12 @@ def draw_keys(frame):
             cv2.line(frame, tuple(shape[0]), tuple(shape[3]), color=(0, 0, 0), thickness=2)  # Left side
             cv2.line(frame, tuple(shape[3]), tuple(shape[2]), color=(0, 0, 0), thickness=2)  # Bottom side
             cv2.line(frame, tuple(shape[2]), tuple(shape[1]), color=(0, 0, 0), thickness=2)  # Right side
+        elif key['type'] == 'white_full':
+            x_min, y_min = key['shape'][0]
+            x_max, y_max = key['shape'][2]
+            cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (255, 255, 255), thickness=cv2.FILLED)
+            cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 0, 0), thickness=2)
+
 
 def process_hand_landmarks(results, frame, hand_landmarks_data):
     keys_with_fingers = set()
