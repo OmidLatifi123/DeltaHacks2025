@@ -9,14 +9,18 @@ import Bird from './Bird'; // Import Bird component
 import './CSS/piano.css';
 
 const pianoKeys = [
-  { note: "C", x_min: 255, x_max: 273.75, y_min: 330, y_max: 350 },
-  { note: "D", x_min: 273.75, x_max: 292.5, y_min: 330, y_max: 350 },
-  { note: "E", x_min: 292.5, x_max: 311.25, y_min: 330, y_max: 350 },
-  { note: "F", x_min: 311.25, x_max: 330, y_min: 330, y_max: 350 },
-  { note: "G", x_min: 330, x_max: 348.75, y_min: 330, y_max: 350 },
-  { note: "A", x_min: 348.75, x_max: 367.5, y_min: 330, y_max: 350 },
-  { note: "B", x_min: 367.5, x_max: 386.25, y_min: 330, y_max: 350 },
-  { note: "C_high", x_min: 386.25, x_max: 405, y_min: 330, y_max: 350 },
+  { note: "C", x_min: 255, x_max: 273.75, y_min: 260, y_max: 350 },
+  { note: "C#", x_min: 268.125, x_max: 279.375, y_min: 260, y_max: 320 },
+  { note: "D", x_min: 273.75, x_max: 292.5, y_min: 260, y_max: 350 },
+  { note: "D#", x_min: 287.625, x_max: 298.875, y_min: 260, y_max: 320 },
+  { note: "E", x_min: 292.5, x_max: 311.25, y_min: 260, y_max: 350 },
+  { note: "F", x_min: 311.25, x_max: 330, y_min: 260, y_max: 350 },
+  { note: "F#", x_min: 324.375, x_max: 335.625, y_min: 260, y_max: 320 },
+  { note: "G", x_min: 330, x_max: 348.75, y_min: 260, y_max: 350 },
+  { note: "G#", x_min: 343.875, x_max: 355.125, y_min: 260, y_max: 320 },
+  { note: "A", x_min: 348.75, x_max: 367.5, y_min: 260, y_max: 350 },
+  { note: "A#", x_min: 362.625, x_max: 373.875, y_min: 260, y_max: 320 },
+  { note: "B", x_min: 367.5, x_max: 386.25, y_min: 260, y_max: 350 }
 ];
 
 
@@ -55,7 +59,9 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
       const top = `${(key.y_min / backendHeight) * canvasHeight}px`;
       const width = `${((key.x_max - key.x_min) / backendWidth) * canvasWidth}px`;
       const height = `${((key.y_max - key.y_min) / backendHeight) * canvasHeight}px`;
-
+    
+      const isSharp = key.note.includes("#"); // Determine if the key is a sharp
+    
       return (
         <div
           key={index}
@@ -65,21 +71,22 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
             top,
             width,
             height,
-            backgroundColor: "rgb(255, 255, 255)",
-            color: "rgba(0, 0, 0, 1)",
+            backgroundColor: isSharp ? "rgb(0, 0, 0)" : "rgb(255, 255, 255)", // Black for sharp keys
+            color: isSharp ? "rgba(255, 255, 255, 0)" : "rgba(0, 0, 0, 1)", // Hide text for sharp keys
             border: "2px solid rgba(0, 0, 0, 1)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontWeight: "bold",
             fontSize: "0.7rem",
-            zIndex: 1,
+            zIndex: isSharp ? 2 : 1, // Ensure sharp keys appear on top
           }}
         >
-          {key.note}
+          {!isSharp && key.note} {/* Render note label only for non-sharp keys */}
         </div>
       );
     });
+    
   };
 
   const generateAlbumCover = async () => {
