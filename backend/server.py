@@ -32,6 +32,7 @@ hands = mp_hands.Hands(min_detection_confidence= 0.6, min_tracking_confidence= 0
 hand_landmarks_data = []
 active_instrument = "piano"
 recent_notes = []
+last_played = []
 # Ensure the Images folder exists
 images_folder = "Images"
 os.makedirs(images_folder, exist_ok=True)
@@ -138,13 +139,12 @@ def generate_abstract_album_cover(notes):
 
 @app.route('/generate-image', methods=['POST'])
 def generate_image():
-    global recent_notes
+    global last_played
     """Generate an abstract album cover based on recent notes."""
-    if not recent_notes:
+    if not last_played:
         return jsonify({"error": "No notes played yet."}), 400
-
-    image_path = generate_abstract_album_cover(recent_notes)
-    recent_notes = []  # Clear recent notes after generating the image
+    
+    image_path = generate_abstract_album_cover(last_played)
     return jsonify({"message": "Image generated successfully!", "image_url": f"/Images/{os.path.basename(image_path)}"})
 
 @app.route('/album-covers/<string:filename>', methods=['DELETE'])
@@ -286,6 +286,7 @@ def webcam():
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         global hand_landmarks_data
         global last_append_time
+        global last_played
 
         while True:
             success, frame = cap.read()
@@ -301,6 +302,7 @@ def webcam():
                 piano.draw_keys(frame)
                 recent_notes = piano.process_hand_landmarks(results, frame, hand_landmarks_data)
                 if recent_notes:
+                    last_played = recent_notes.copy()
                     socketio.emit("recent_key", {"key": recent_notes[-1] if recent_notes else ""})
                 if is_recording:
                     if not recorded_notes:

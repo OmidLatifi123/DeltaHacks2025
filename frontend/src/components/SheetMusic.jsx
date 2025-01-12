@@ -62,11 +62,19 @@ const SheetMusic = () => {
       const response = await axios.post("http://127.0.0.1:5000/generate-notes", {
         instructions: inputText,
       });
+  
+      if (response.status === 200) {
+        alert("Notes generated successfully!");
+        window.location.reload(); // Refreshes the page
+      } else {
+        alert("Unexpected response. Please check the server.");
+      }
     } catch (error) {
       console.error("Error generating notes:", error);
       alert("Failed to generate notes. Please try again.");
     }
   };
+  
 
   return (
     <div
