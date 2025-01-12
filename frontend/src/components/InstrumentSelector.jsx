@@ -59,6 +59,8 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
     return { x: xCanvas, y: yCanvas };
   };
 
+  const fingertipIndexes = [4, 8, 12, 16, 20];
+
   const isOverKey = (landmarkCanvas, pianoKey) => {
     return (
       pianoKey.x_min <= landmarkCanvas.x &&
@@ -71,12 +73,14 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
   useEffect(() => {
     const newActiveKeys = [];
     handData.forEach((hand) => {
-      const canvasCoords = convertToCanvasCoordinates(hand[8]);
+      fingertipIndexes.forEach((index) => {
+        const canvasCoords = convertToCanvasCoordinates(hand[index]);
         pianoKeys.forEach((key) => {
           if (isOverKey(canvasCoords, key)) {
             newActiveKeys.push(key.note);
           }
         });
+      });
     });
     setActiveKeys(newActiveKeys);
   }, [handData]);
@@ -161,8 +165,8 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
     const recordingBox = {
       x_min: rect.x_min - 30, // Adjusted for label and padding
       x_max: rect.x_max + 80, // Adjusted for label and padding
-      y_min: rect.y_min - 6, // Adjusted for label and padding
-      y_max: rect.y_max + 15, // Adjusted for label and padding
+      y_min: rect.y_min - 8, // Adjusted for label and padding
+      y_max: rect.y_max + 12, // Adjusted for label and padding
     };
   
     const mappedRecordingBox = {
@@ -225,7 +229,7 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
             top: `${rect.y_min}px`,
             width: `${rect.x_max - rect.x_min}px`,
             height: `${rect.y_max - rect.y_min}px`,
-            backgroundColor: isRecording ? "blue" : "red",
+            backgroundColor: "red",
             borderRadius: isRecording ? "0%" : "50%",
             boxShadow: isRecording
               ? "0 0 12px 4px rgba(0, 0, 255, 0.8)"
@@ -287,7 +291,6 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
           boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
         }}
       >
-        {renderRecordingArea()}
         {selectedInstrument === "piano" && (
           <div
             style={{
@@ -300,6 +303,7 @@ const InstrumentSelector = ({ selectedInstrument, onInstrumentChange }) => {
               zIndex: 1,
             }}
           >
+            {renderRecordingArea()}
             {renderKeys()}
           </div>
         )}

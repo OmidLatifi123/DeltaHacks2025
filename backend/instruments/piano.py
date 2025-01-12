@@ -42,14 +42,10 @@ keys = [
 
 
 # Track active notes, hand data, and played notes
-active_notes = set()
-recent_notes = []  # Keep track of the most recent notes played (up to 10)
-
+active_notes = []
 
 def draw_keys(frame):
     for key in keys:
-        x_min = key['shape'][:, 0].min()
-        y_min = key['shape'][:, 1].min()
         if key['type'] == 'white':
             # Draw the main white key
             cv2.fillPoly(frame, [key['shape']], (255, 255, 255))
@@ -70,7 +66,6 @@ def draw_keys(frame):
             cv2.line(frame, tuple(shape[2]), tuple(shape[1]), color=(0, 0, 0), thickness=2)  # Right side
 
 def process_hand_landmarks(results, frame, hand_landmarks_data):
-    global recent_notes
     keys_with_fingers = set()
     hand_landmarks_data.clear()
 
@@ -108,23 +103,13 @@ def process_hand_landmarks(results, frame, hand_landmarks_data):
         if note not in keys_with_fingers:
             stop_midi(note)
 
-    if keys_with_fingers:
-        recent_notes = list(keys_with_fingers)  # Update recent_notes with the currently played keys
-
-    return recent_notes
+    return active_notes
 
 def play_midi(note):
     """Play a MIDI note and record it."""
-    global recent_notes
     if note in midi_note_numbers and note not in active_notes:
         midi_out.note_on(midi_note_numbers[note], velocity=100)
-        active_notes.add(note)
-
-        # Record the note
-        recent_notes.append(note)
-        if len(recent_notes) > 10:  # Keep only the last 10 notes
-            recent_notes.pop(0)
-
+        active_notes.append(note)
 
 def stop_midi(note):
     """Stop a MIDI note."""

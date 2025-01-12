@@ -10,7 +10,8 @@ import importlib
 from flask_socketio import SocketIO
 import instruments.drums as drums
 import instruments.piano as piano
-from music21 import stream, note
+from music21 import stream, note, chord, tempo, meter, metadata
+import time
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -31,6 +32,7 @@ os.makedirs(images_folder, exist_ok=True)
 pipeline = None
 is_recording = False
 recorded_notes = []
+last_append_time = None
 
 # Ensure the notes folder exists
 notes_folder = "notes"
@@ -126,13 +128,34 @@ def get_hand_data():
     return jsonify({'hands': hand_landmarks_data})  
 
 
+def round_to_nearest_duration(time_interval):
+    # Define the note durations based on a quarter note length of 0.5
+    note_durations = {
+        "eighth": 0.25,
+        "quarter": 0.5,
+        "dotted quarter": 0.75,
+        "half": 1.0,
+        "dotted half": 1.5,
+        "whole": 2.0
+    }
+    
+    # Find the closest duration
+    closest_note = min(note_durations, key=lambda note: abs(note_durations[note] - time_interval))
+    
+    return note_durations[closest_note]
+
 def Create_Sheet_Music(recorded_notes):
     # Create a new music21 stream
     sheet_music = stream.Stream()
 
+    sheet_music.metadata = metadata.Metadata()
+    sheet_music.metadata.title = "Untitled Custom Composition"
+    sheet_music.append(tempo.MetronomeMark(number=120))
+    sheet_music.append(meter.TimeSignature("4/4"))
+
     # Map note names to pitches
     note_mapping = {
-         "C": "C4",
+        "C": "C4",
         "C#": "C#4",
         "D": "D4",
         "D#": "D#4",
@@ -148,17 +171,35 @@ def Create_Sheet_Music(recorded_notes):
     }
 
     # Convert recorded notes into music21 notes
-    for pitch in recorded_notes:
-        if pitch in note_mapping:
-            # Create a quarter note for each pitch
-            n = note.Note(note_mapping[pitch])
-            n.quarterLength = 1  # Quarter note
-            sheet_music.append(n)
-        else:
-            print(f"Warning: Note '{pitch}' is not recognized and will be skipped.")
+    for entry in recorded_notes:
+        notes = entry.get("notes", [])
+        time_interval = entry.get("time_interval")
+        if time_interval is None or time_interval < 0.2:
+            continue
+        time_interval = round_to_nearest_duration(time_interval)
 
+        # Calculate quarterLength based on time_interval and 120 BPM
+        quarter_length = time_interval / 0.5  # 0.5 seconds per beat at 120 BPM
+
+        if not notes:  # Treat as a rest if no notes are present
+            r = note.Rest()
+            r.quarterLength = quarter_length
+            sheet_music.append(r)
+        elif len(notes) == 1:  # Single note
+            pitch = notes[0]
+            if pitch in note_mapping:
+                n = note.Note(note_mapping[pitch])
+                n.quarterLength = quarter_length
+                sheet_music.append(n)
+        else:  # Multiple notes, treat as a chord
+            pitches = [note_mapping[n] for n in notes if n in note_mapping]
+            if pitches:
+                c = chord.Chord(pitches)
+                c.quarterLength = quarter_length
+                sheet_music.append(c)
 
     return sheet_music
+
 
 @app.route('/webcam')
 def webcam():
@@ -170,6 +211,8 @@ def webcam():
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         global hand_landmarks_data
+        global last_append_time
+
         while True:
             success, frame = cap.read()
             if not success:
@@ -180,22 +223,35 @@ def webcam():
             results = hands.process(rgb_frame)
 
             # Process based on the instrument
-# Update this section in the webcam route inside generate_frames()
             if active_instrument == "piano":
                 piano.draw_keys(frame)
                 recent_notes = piano.process_hand_landmarks(results, frame, hand_landmarks_data)
                 if recent_notes:
-                    if is_recording:
-                        if not recorded_notes or recent_notes[0] != recorded_notes[-1]:
-                            recorded_notes.extend(recent_notes)
-                    else:
-                        if recorded_notes:
-                            sheet_music = Create_Sheet_Music(recorded_notes)
-                            pdf_path = f"notes/output_sheet_music_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                            sheet_music.write(fmt='musicxml.pdf', fp=pdf_path)
-                            recorded_notes = []
-
-                    socketio.emit("recent_key", {"key": recent_notes[-1] if recent_notes else ""}) #Is this ever > 1 anyway?
+                    socketio.emit("recent_key", {"key": recent_notes[-1] if recent_notes else ""})
+                if is_recording:
+                    if not recorded_notes:
+                        if recent_notes:
+                            recorded_notes.append({
+                                'notes': recent_notes.copy(),
+                                'time_interval': None
+                            })
+                            last_append_time = time.time()
+                    elif recent_notes != recorded_notes[-1]['notes']:
+                        current_time = time.time()
+                        time_interval = current_time - last_append_time
+                        last_append_time = current_time
+                        recorded_notes[-1]['time_interval'] = time_interval
+                        recorded_notes.append({
+                            'notes': recent_notes.copy(),
+                            'time_interval': None
+                        })
+                else:
+                    last_append_time = None
+                    if recorded_notes:
+                        sheet_music = Create_Sheet_Music(recorded_notes)
+                        pdf_path = f"notes/output_sheet_music_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                        sheet_music.write(fmt='musicxml.pdf', fp=pdf_path)
+                        recorded_notes = []
             elif active_instrument == "drums":
                 drums.process_hand_landmarks(results, frame, hand_landmarks_data)
 

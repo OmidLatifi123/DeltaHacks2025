@@ -34,8 +34,7 @@ const AlbumCover = () => {
     link.click();
     document.body.removeChild(link);
 
-    // After downloading, navigate back to the album page
-    navigate("/Instrument"); // Adjust the path to your album page
+    navigate("/Instrument");
   };
 
   return (
@@ -105,7 +104,7 @@ const AlbumCover = () => {
                   cursor: "pointer",
                 }}
               >
-                Download
+                View
               </button>
             </div>
           </div>

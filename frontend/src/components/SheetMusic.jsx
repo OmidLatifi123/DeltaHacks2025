@@ -5,38 +5,31 @@ import Bird from './Bird'; // Import Bird component
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import { Worker, Viewer } from "@react-pdf-viewer/core";
+import "@react-pdf-viewer/core/lib/styles/index.css";
 
 const SheetMusic = () => {
-  const [albumCovers, setAlbumCovers] = useState([]);
+  const [sheetMusic, setSheetMusic] = useState([]);
+  const [selectedPdf, setSelectedPdf] = useState(null); // State for the selected PDF
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchAlbumCovers = async () => {
+    const fetchSheetMusic = async () => {
       try {
         const response = await axios.get("http://127.0.0.1:5000/sheet-music");
-        setAlbumCovers(response.data);
+        setSheetMusic(response.data);
         setError(null);
       } catch (err) {
-        console.error("Error fetching album covers:", err);
-        setError("Failed to fetch album covers. Ensure the backend is running.");
+        console.error("Error fetching sheet music:", err);
+        setError("Failed to fetch Sheet Music. Ensure the backend is running.");
       }
     };
 
-    fetchAlbumCovers();
+    fetchSheetMusic();
   }, []);
 
-  const downloadImage = (imageUrl, imageName) => {
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = imageName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // After downloading, navigate back to the album page
-    navigate("/Instrument"); // Adjust the path to your album page
-  };
+  const closeModal = () => setSelectedPdf(null);
 
   return (
     <div
@@ -44,13 +37,12 @@ const SheetMusic = () => {
         fontFamily: "Arial, sans-serif",
         textAlign: "center",
         paddingTop: "5%",
-        height: "100%"
+        height: "100%",
       }}
     >
       <Navbar />
-      <h1>Album Covers</h1>
+      <h1>Sheet Music</h1>
       {error && <p style={{ color: "red" }}>{error}</p>}
-
       <div
         style={{
           display: "grid",
@@ -59,58 +51,114 @@ const SheetMusic = () => {
           marginTop: "20px",
         }}
       >
-        {albumCovers.map((cover) => (
+      {sheetMusic.map((cover) => (
+  <div
+    key={cover.filename}
+    style={{
+      border: "1px solid #ddd",
+      borderRadius: "10px",
+      padding: "10px",
+      backgroundColor: "#f9f9f9",
+      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+    }}
+  >
+    {/* PDF Preview */}
+    <div
+      style={{
+        width: "100%",
+        height: "200px",
+        borderRadius: "10px",
+        overflow: "hidden",
+      }}
+    >
+      <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+        <Viewer
+          fileUrl={`http://127.0.0.1:5000/notes/${cover.filename}`}
+          renderMode="thumbnail" // Optionally adjust to show a thumbnail view
+        />
+      </Worker>
+    </div>
+
+    <div style={{ marginTop: "10px", textAlign: "left" }}>
+      <p>
+        <strong>Date Created:</strong>{" "}
+        {new Date(cover.createdAt).toLocaleString()}
+      </p>
+      <button
+        onClick={() =>
+          setSelectedPdf(`http://127.0.0.1:5000/notes/${cover.filename}`)
+        }
+        style={{
+          padding: "10px 15px",
+          fontSize: "14px",
+          fontWeight: "bold",
+          color: "#fff",
+          backgroundColor: "#007BFF",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+        }}
+      >
+        View
+      </button>
+    </div>
+  </div>
+))}
+
+      </div>
+
+      {/* Modal for PDF Viewer */}
+      {selectedPdf && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            zIndex: 1000,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <div
-            key={cover.filename}
             style={{
-              border: "1px solid #ddd",
+              position: "relative",
+              width: "80%",
+              height: "80%",
+              backgroundColor: "#fff",
+              padding: "45px",
               borderRadius: "10px",
-              padding: "10px",
-              backgroundColor: "#f9f9f9",
-              boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+              overflow: "hidden",
             }}
           >
-            <img
-              src={`http://127.0.0.1:5000/notes/${cover.filename}`}
-              alt={cover.filename}
+            <button
+              onClick={closeModal}
               style={{
-                width: "100%",
-                height: "200px",
-                objectFit: "cover",
-                borderRadius: "10px",
+                position: "absolute",
+                top: "5px",
+                right: "5px",
+                padding: "10px 15px",
+                fontSize: "14px",
+                fontWeight: "bold",
+                color: "#fff",
+                backgroundColor: "#FF0000",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
               }}
-            />
-            <div style={{ marginTop: "10px", textAlign: "left" }}>
-              <p>
-                <strong>Filename:</strong> {cover.filename}
-              </p>
-              <p>
-                <strong>Date Created:</strong> {new Date(cover.createdAt).toLocaleString()}
-              </p>
-              <button
-                onClick={() =>
-                  downloadImage(
-                    `http://127.0.0.1:5000/notes/${cover.filename}`,
-                    cover.filename
-                  )
-                }
-                style={{
-                  padding: "10px 15px",
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                  color: "#fff",
-                  backgroundColor: "#007BFF",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}
-              >
-                Download
-              </button>
-            </div>
+            >
+              Close
+            </button>
+            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+              <Viewer fileUrl={selectedPdf} />
+            </Worker>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );
