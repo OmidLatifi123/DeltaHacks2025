@@ -26,9 +26,6 @@ const Navbar = () => {
             <a href="/tutorial">Tutorial</a>
           </li>
         </ul>
-        <Link to="#get-started" className="navbar-cta">
-          Get Started
-        </Link>
       </div>
     </nav>
   );

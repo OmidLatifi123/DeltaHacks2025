@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import { useNavigate } from "react-router-dom";
 import './CSS/Home.css';
 import ElectricPianoModel from './3D-Models/ElectricPianoModel';
 import DrumsModel from './3D-Models/Drums';
@@ -9,6 +10,11 @@ import Footer from "./Footer";
 
 
 function Home() {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate("/tutorial");
+  };
   return (
     <div className="home-container">
       <header className="hero-section">
@@ -20,7 +26,7 @@ function Home() {
             <p className="hero-subtitle">
               Experience the harmony of technology and music like never before.
             </p>
-            <button className="cta-button">Get Started</button>
+            <button className="cta-button" onClick={handleGetStarted}>Get Started</button>
           </div>
         </div>
       </header>
