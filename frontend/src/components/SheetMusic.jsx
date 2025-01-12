@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./CSS/albumcovers.css";
-import Bird from './Bird'; // Import Bird component
+import Bird from './Bird';
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -10,7 +10,7 @@ import "@react-pdf-viewer/core/lib/styles/index.css";
 
 const SheetMusic = () => {
   const [sheetMusic, setSheetMusic] = useState([]);
-  const [selectedPdf, setSelectedPdf] = useState(null); // State for the selected PDF
+  const [selectedPdf, setSelectedPdf] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -28,6 +28,21 @@ const SheetMusic = () => {
 
     fetchSheetMusic();
   }, []);
+
+  const deleteSheetMusic = async (filename) => {
+    try {
+      const response = await axios.delete(`http://127.0.0.1:5000/sheet-music/${filename}`);
+      if (response.data.status === "success") {
+        alert(response.data.message);
+        setSheetMusic(sheetMusic.filter((sheet) => sheet.filename !== filename));
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error deleting sheet music:", error);
+      alert("Failed to delete sheet music. Please try again.");
+    }
+  };
 
   const closeModal = () => setSelectedPdf(null);
 
@@ -51,63 +66,101 @@ const SheetMusic = () => {
           marginTop: "20px",
         }}
       >
-      {sheetMusic.map((cover) => (
-  <div
-    key={cover.filename}
-    style={{
-      border: "1px solid #ddd",
-      borderRadius: "10px",
-      padding: "10px",
-      backgroundColor: "#f9f9f9",
-      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-    }}
-  >
-    {/* PDF Preview */}
-    <div
-      style={{
-        width: "100%",
-        height: "200px",
-        borderRadius: "10px",
-        overflow: "hidden",
-      }}
-    >
-      <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-        <Viewer
-          fileUrl={`http://127.0.0.1:5000/notes/${cover.filename}`}
-          renderMode="thumbnail" // Optionally adjust to show a thumbnail view
-        />
-      </Worker>
-    </div>
+        {sheetMusic.map((cover) => (
+          <div
+            key={cover.filename}
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: "10px",
+              padding: "10px",
+              backgroundColor: "#f9f9f9",
+              boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                height: "200px",
+                borderRadius: "10px",
+                overflow: "hidden",
+              }}
+            >
+              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                <Viewer
+                  fileUrl={`http://127.0.0.1:5000/notes/${cover.filename}`}
+                  renderMode="thumbnail"
+                />
+              </Worker>
+            </div>
 
-    <div style={{ marginTop: "10px", textAlign: "left" }}>
-      <p>
-        <strong>Date Created:</strong>{" "}
-        {new Date(cover.createdAt).toLocaleString()}
-      </p>
-      <button
-        onClick={() =>
-          setSelectedPdf(`http://127.0.0.1:5000/notes/${cover.filename}`)
-        }
-        style={{
-          padding: "10px 15px",
-          fontSize: "14px",
-          fontWeight: "bold",
-          color: "#fff",
-          backgroundColor: "#007BFF",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
-        View
-      </button>
-    </div>
-  </div>
-))}
-
+            <div style={{ marginTop: "10px", textAlign: "left" }}>
+              <p>
+                <strong>Date Created:</strong>{" "}
+                {new Date(cover.createdAt).toLocaleString()}
+              </p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <button
+                  onClick={() =>
+                    setSelectedPdf(`http://127.0.0.1:5000/notes/${cover.filename}`)
+                  }
+                  style={{
+                    padding: "10px 15px",
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    color: "#fff",
+                    backgroundColor: "#007BFF",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  View
+                </button>
+                <button
+                  onClick={() => deleteSheetMusic(cover.filename)}
+                  style={{
+                    backgroundColor: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "8px",
+                    transition: "background-color 0.2s",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f0f0f0";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#666666"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Modal for PDF Viewer */}
       {selectedPdf && (
         <div
           style={{

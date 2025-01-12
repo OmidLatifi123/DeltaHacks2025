@@ -86,6 +86,19 @@ def generate_image():
     recent_notes = []  # Clear recent notes after generating the image
     return jsonify({"message": "Image generated successfully!", "image_url": f"/Images/{os.path.basename(image_path)}"})
 
+@app.route('/album-covers/<string:filename>', methods=['DELETE'])
+def delete_album_cover(filename):
+    """Delete a specific album cover."""
+    file_path = os.path.join(images_folder, filename)
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+            return jsonify({"status": "success", "message": f"{filename} has been deleted."}), 200
+        except Exception as e:
+            return jsonify({"status": "error", "message": f"Error deleting file: {str(e)}"}), 500
+    else:
+        return jsonify({"status": "error", "message": f"File {filename} not found."}), 404
+
 
 @app.route('/Images/<path:filename>')
 def serve_image(filename):
@@ -305,6 +318,20 @@ def get_sheet_music():
                 "createdAt": datetime.fromtimestamp(created_at).isoformat()
             })
     return jsonify(sheet_music_files)
+
+@app.route('/sheet-music/<string:filename>', methods=['DELETE'])
+def delete_sheet_music(filename):
+    """Delete a specific sheet music file."""
+    file_path = os.path.join(notes_folder, filename)
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+            return jsonify({"status": "success", "message": f"{filename} has been deleted."}), 200
+        except Exception as e:
+            return jsonify({"status": "error", "message": f"Error deleting file: {str(e)}"}), 500
+    else:
+        return jsonify({"status": "error", "message": f"File {filename} not found."}), 404
+
 
 @app.route('/Notes/<path:filename>')
 def serve_sheet_music(filename):

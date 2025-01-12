@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./CSS/albumcovers.css";
-import Bird from './Bird'; // Import Bird component
+import Bird from './Bird';
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -37,6 +37,21 @@ const AlbumCover = () => {
     navigate("/Instrument");
   };
 
+  const deleteAlbumCover = async (filename) => {
+    try {
+      const response = await axios.delete(`http://127.0.0.1:5000/album-covers/${filename}`);
+      if (response.data.status === "success") {
+        alert(response.data.message);
+        setAlbumCovers(albumCovers.filter((cover) => cover.filename !== filename));
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error deleting album cover:", error);
+      alert("Failed to delete album cover. Please try again.");
+    }
+  };
+
   return (
     <div
       style={{
@@ -67,6 +82,7 @@ const AlbumCover = () => {
               padding: "10px",
               backgroundColor: "#f9f9f9",
               boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+              position: "relative",
             }}
           >
             <img
@@ -86,26 +102,66 @@ const AlbumCover = () => {
               <p>
                 <strong>Date Created:</strong> {new Date(cover.createdAt).toLocaleString()}
               </p>
-              <button
-                onClick={() =>
-                  downloadImage(
-                    `http://127.0.0.1:5000/Images/${cover.filename}`,
-                    cover.filename
-                  )
-                }
-                style={{
-                  padding: "10px 15px",
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                  color: "#fff",
-                  backgroundColor: "#007BFF",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}
-              >
-                View
-              </button>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <button
+                  onClick={() =>
+                    downloadImage(
+                      `http://127.0.0.1:5000/Images/${cover.filename}`,
+                      cover.filename
+                    )
+                  }
+                  style={{
+                    padding: "10px 15px",
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    color: "#fff",
+                    backgroundColor: "#007BFF",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  View
+                </button>
+                <button
+                  onClick={() => deleteAlbumCover(cover.filename)}
+                  style={{
+                    backgroundColor: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "8px",
+                    transition: "background-color 0.2s",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f0f0f0";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#666666"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         ))}
